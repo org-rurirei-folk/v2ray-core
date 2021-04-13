@@ -2,6 +2,12 @@ name: CodeQL
 
 on:
   push:
+    branches:
+      - master
+      - v*
+      - rkt*
+    paths:
+      - "**/*.go"
   pull_request:
     types: [opened, synchronize, reopened]
 
