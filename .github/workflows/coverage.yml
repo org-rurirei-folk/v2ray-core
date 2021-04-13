@@ -1,9 +1,13 @@
 name: Coverage
 
 on:
-  pull-request:
+  push:
     branches:
-      - rkt
+      - master
+      - v*
+    paths:
+      - "**/*.go"
+  pull_request:
     paths:
       - "**/*.go"
 
