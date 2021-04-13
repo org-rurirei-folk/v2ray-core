@@ -7,11 +7,9 @@ on:
       - v*
     paths:
       - "**/*.go"
+      - ".github/workflows/coverage.yml"
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - "**/*.go"
-      - ".github/workflows/coverage.yml"
 
 jobs:
   coverage:
