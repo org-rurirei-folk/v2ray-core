@@ -74,7 +74,7 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 	if outbound := session.OutboundFromContext(ctx); outbound != nil {
 		src = net.Destination{Address: outbound.Gateway}
 	}
-	if inbound := session.InboundFromContext(ctx); inbound != nil && inbound.Source.IsValid() {
+	if inbound := session.InboundFromContext(ctx); inbound != nil && inbound.Source != nil && inbound.Source.IsValid() {
 		src = inbound.Source
 	}
 
