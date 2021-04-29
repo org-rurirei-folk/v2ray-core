@@ -65,9 +65,13 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *MemoryStrea
 
 // DialSystem calls system dialer to create a network connection.
 func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-	var src net.Address
+	/* var src net.Address
 	if outbound := session.OutboundFromContext(ctx); outbound != nil {
 		src = outbound.Gateway
+	} */
+	var src net.Destination
+	if inbound := session.InboundFromContext(ctx); inbound != nil {
+		src = inbound.Source
 	}
 
 	if transportLayerOutgoingTag := session.GetTransportLayerProxyTagFromContext(ctx); transportLayerOutgoingTag != "" {
