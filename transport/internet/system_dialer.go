@@ -14,7 +14,7 @@ var (
 )
 
 type SystemDialer interface {
-	Dial(ctx context.Context, source net.Address, destination net.Destination, sockopt *SocketConfig) (net.Conn, error)
+	Dial(ctx context.Context, source, destination net.Destination, sockopt *SocketConfig) (net.Conn, error)
 }
 
 type DefaultSystemDialer struct {
@@ -43,9 +43,9 @@ func hasBindAddr(sockopt *SocketConfig) bool {
 	return sockopt != nil && len(sockopt.BindAddress) > 0 && sockopt.BindPort > 0
 }
 
-func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
 	if dest.Network == net.Network_UDP && !hasBindAddr(sockopt) {
-		srcAddr := resolveSrcAddr(net.Network_UDP, src)
+		srcAddr := resolveSrcAddr(net.Network_UDP, src.Address)
 		if srcAddr == nil {
 			srcAddr = &net.UDPAddr{
 				IP:   []byte{0, 0, 0, 0},
@@ -69,7 +69,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 	dialer := &net.Dialer{
 		Timeout:   time.Second * 16,
 		DualStack: true,
-		LocalAddr: resolveSrcAddr(dest.Network, src),
+		LocalAddr: resolveSrcAddr(dest.Network, src.Address),
 	}
 
 	if sockopt != nil || len(d.controllers) > 0 {
@@ -150,7 +150,7 @@ func WithAdapter(dialer SystemDialerAdapter) SystemDialer {
 	}
 }
 
-func (v *SimpleSystemDialer) Dial(ctx context.Context, src net.Address, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+func (v *SimpleSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
 	return v.adapter.Dial(dest.Network.SystemString(), dest.NetAddr())
 }
 
