@@ -61,19 +61,3 @@ func mustToContext(ctx context.Context, v *Instance) context.Context {
 	}
 	return ctx
 }
-
-// ToContext returns ctx from the given context, or creates an Instance if the context doesn't find that.
-func ToContext(ctx context.Context, v *Instance) context.Context {
-	if FromContext(ctx) != v {
-		ctx = context.WithValue(ctx, v2rayKey, v)
-	}
-	return ctx
-}
-
-// MustToContext returns ctx from the given context, or panics if not found that.
-func MustToContext(ctx context.Context, v *Instance) context.Context {
-	if c := ToContext(ctx, v); c != ctx {
-		panic("V is not in context.")
-	}
-	return ctx
-}
