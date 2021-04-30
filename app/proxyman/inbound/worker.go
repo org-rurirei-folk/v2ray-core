@@ -78,11 +78,14 @@ func (w *tcpWorker) callback(conn internet.Connection) {
 			})
 		}
 	}
-	ctx = session.ContextWithInbound(ctx, &session.Inbound{
-		Source:  net.DestinationFromAddr(conn.RemoteAddr()),
-		Gateway: net.TCPDestination(w.address, w.port),
-		Tag:     w.tag,
-	})
+	inbound := session.InboundFromContext(ctx)
+	if inbound == nil {
+		inbound = new(session.Inbound)
+		inbound.Source = net.DestinationFromAddr(conn.RemoteAddr())
+		inbound.Gateway = net.TCPDestination(w.address, w.port)
+		inbound.Tag = w.tag
+	}
+	ctx = session.ContextWithInbound(ctx, inbound)
 	content := new(session.Content)
 	if w.sniffingConfig != nil {
 		content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
@@ -299,11 +302,14 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 					Target: originalDest,
 				})
 			}
-			ctx = session.ContextWithInbound(ctx, &session.Inbound{
-				Source:  source,
-				Gateway: net.UDPDestination(w.address, w.port),
-				Tag:     w.tag,
-			})
+			inbound := session.InboundFromContext(ctx)
+			if inbound == nil {
+				inbound = new(session.Inbound)
+				inbound.Source = source
+				inbound.Gateway = net.UDPDestination(w.address, w.port)
+				inbound.Tag = w.tag
+			}
+			ctx = session.ContextWithInbound(ctx, inbound)
 			content := new(session.Content)
 			if w.sniffingConfig != nil {
 				content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
@@ -430,11 +436,14 @@ func (w *dsWorker) callback(conn internet.Connection) {
 	sid := session.NewID()
 	ctx = session.ContextWithID(ctx, sid)
 
-	ctx = session.ContextWithInbound(ctx, &session.Inbound{
-		Source:  net.DestinationFromAddr(conn.RemoteAddr()),
-		Gateway: net.UnixDestination(w.address),
-		Tag:     w.tag,
-	})
+	inbound := session.InboundFromContext(ctx)
+	if inbound == nil {
+		inbound = new(session.Inbound)
+		inbound.Source = net.DestinationFromAddr(conn.RemoteAddr())
+		inbound.Gateway = net.UnixDestination(w.address)
+		inbound.Tag = w.tag
+	}
+	ctx = session.ContextWithInbound(ctx, inbound)
 	content := new(session.Content)
 	if w.sniffingConfig != nil {
 		content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
