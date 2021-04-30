@@ -24,8 +24,12 @@ type DefaultSystemDialer struct {
 
 func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 	if addr.Address == nil {
-		// return nil, errors.New("empty addr")
-		addr.Address = net.AnyIP
+		return nil, errors.New("empty addr")
+		// addr.Address = net.AnyIP
+	}
+
+	if addr.Address == net.AnyIP {
+		return nil, nil
 	}
 
 	switch addr.Network {
