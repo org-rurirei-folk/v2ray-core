@@ -81,11 +81,11 @@ func (w *tcpWorker) callback(conn internet.Connection) {
 	inbound := session.InboundFromContext(ctx)
 	if inbound == nil {
 		inbound = new(session.Inbound)
+		ctx = session.ContextWithInbound(ctx, inbound)
 		inbound.Source = net.DestinationFromAddr(conn.RemoteAddr())
 		inbound.Gateway = net.TCPDestination(w.address, w.port)
 		inbound.Tag = w.tag
 	}
-	ctx = session.ContextWithInbound(ctx, inbound)
 	content := new(session.Content)
 	if w.sniffingConfig != nil {
 		content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
@@ -305,11 +305,11 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 			inbound := session.InboundFromContext(ctx)
 			if inbound == nil {
 				inbound = new(session.Inbound)
+				ctx = session.ContextWithInbound(ctx, inbound)
 				inbound.Source = source
 				inbound.Gateway = net.UDPDestination(w.address, w.port)
 				inbound.Tag = w.tag
 			}
-			ctx = session.ContextWithInbound(ctx, inbound)
 			content := new(session.Content)
 			if w.sniffingConfig != nil {
 				content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
@@ -439,11 +439,11 @@ func (w *dsWorker) callback(conn internet.Connection) {
 	inbound := session.InboundFromContext(ctx)
 	if inbound == nil {
 		inbound = new(session.Inbound)
+		ctx = session.ContextWithInbound(ctx, inbound)
 		inbound.Source = net.DestinationFromAddr(conn.RemoteAddr())
 		inbound.Gateway = net.UnixDestination(w.address)
 		inbound.Tag = w.tag
 	}
-	ctx = session.ContextWithInbound(ctx, inbound)
 	content := new(session.Content)
 	if w.sniffingConfig != nil {
 		content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
