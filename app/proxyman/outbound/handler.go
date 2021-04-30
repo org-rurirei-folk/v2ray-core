@@ -169,9 +169,13 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 			handler := h.outboundManager.GetHandler(tag)
 			if handler != nil {
 				newError("proxying to ", tag, " for dest ", dest).AtDebug().WriteToLog(session.ExportIDToError(ctx))
-				ctx = session.ContextWithOutbound(ctx, &session.Outbound{
-					Target: dest,
-				})
+				outbound := session.OutboundFromContext(ctx)
+				if outbound == nil {
+					outbound = new(session.Outbound)
+					outbound.Gateway = net.Destination{Address: net.IPAddress([]byte{0, 0, 0, 0}), Port: net.Port(0), Network: dest.Network}
+				}
+				outbound.Target = dest
+				ctx = session.ContextWithOutbound(ctx, outbound)
 
 				opts := pipe.OptionsFromContext(ctx)
 				uplinkReader, uplinkWriter := pipe.New(opts...)
