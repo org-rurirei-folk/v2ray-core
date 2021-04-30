@@ -50,7 +50,7 @@ type Outbound struct {
 	// Target address of the outbound connection.
 	Target net.Destination
 	// Gateway address
-	Gateway net.Address
+	Gateway net.Destination
 }
 
 // SniffingRequest controls the behavior of content sniffing.
