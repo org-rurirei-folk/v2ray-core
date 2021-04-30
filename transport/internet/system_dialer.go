@@ -2,6 +2,7 @@ package internet
 
 import (
 	"context"
+	"errors"
 	"syscall"
 	"time"
 
@@ -21,46 +22,41 @@ type DefaultSystemDialer struct {
 	controllers []controller
 }
 
-func resolveSrcAddr(network net.Network, src net.Address) net.Addr {
-	if src == nil || src == net.AnyIP {
-		return nil
+func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
+	if addr.Address == nil || addr.Address == net.AnyIP {
+		return net.Addr{}, errors.New("empty src addr")
 	}
 
-	if network == net.Network_TCP {
-		return &net.TCPAddr{
-			IP:   src.IP(),
-			Port: 0,
-		}
-	}
-
-	return &net.UDPAddr{
-		IP:   src.IP(),
-		Port: 0,
+	switch addr.Network {
+		case net.Network_TCP:
+			return net.ResolveTCPAddr(addr.Network.SystemString(), addr.NetAddr())
+		case net.Network_UDP:
+			return net.ResolveUDPAddr(addr.Network.SystemString(), addr.NetAddr())
+		default:
+			return net.Addr{}, errors.New("unknown network")
 	}
 }
 
-func hasBindAddr(sockopt *SocketConfig) bool {
+func HasBindAddr(sockopt *SocketConfig) bool {
 	return sockopt != nil && len(sockopt.BindAddress) > 0 && sockopt.BindPort > 0
 }
 
 func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-	if dest.Network == net.Network_UDP && !hasBindAddr(sockopt) {
-		srcAddr := resolveSrcAddr(net.Network_UDP, src.Address)
-		if srcAddr == nil {
-			srcAddr = &net.UDPAddr{
-				IP:   []byte{0, 0, 0, 0},
-				Port: 0,
-			}
-		}
+	srcAddr, err := ResolveNetAddr(src)
+	if err != nil {
+		return nil, err
+	}
+
+	if dest.Network == net.Network_UDP && !HasBindAddr(sockopt) {
 		packetConn, err := ListenSystemPacket(ctx, srcAddr, sockopt)
 		if err != nil {
 			return nil, err
 		}
-		destAddr, err := net.ResolveUDPAddr("udp", dest.NetAddr())
+		destAddr, err := ResolveNetAddr(dest)
 		if err != nil {
 			return nil, err
 		}
-		return &packetConnWrapper{
+		return &PacketConnWrapper{
 			conn: packetConn,
 			dest: destAddr,
 		}, nil
@@ -69,7 +65,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destinatio
 	dialer := &net.Dialer{
 		Timeout:   time.Second * 16,
 		DualStack: true,
-		LocalAddr: resolveSrcAddr(dest.Network, src.Address),
+		LocalAddr: srcAddr,
 	}
 
 	if sockopt != nil || len(d.controllers) > 0 {
@@ -79,7 +75,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destinatio
 					if err := applyOutboundSocketOptions(network, address, fd, sockopt); err != nil {
 						newError("failed to apply socket options").Base(err).WriteToLog(session.ExportIDToError(ctx))
 					}
-					if dest.Network == net.Network_UDP && hasBindAddr(sockopt) {
+					if dest.Network == net.Network_UDP && HasBindAddr(sockopt) {
 						if err := bindAddr(fd, sockopt.BindAddress, sockopt.BindPort); err != nil {
 							newError("failed to bind source address to ", sockopt.BindAddress).Base(err).WriteToLog(session.ExportIDToError(ctx))
 						}
@@ -98,41 +94,41 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destinatio
 	return dialer.DialContext(ctx, dest.Network.SystemString(), dest.NetAddr())
 }
 
-type packetConnWrapper struct {
+type PacketConnWrapper struct {
 	conn net.PacketConn
 	dest net.Addr
 }
 
-func (c *packetConnWrapper) Close() error {
+func (c *PacketConnWrapper) Close() error {
 	return c.conn.Close()
 }
 
-func (c *packetConnWrapper) LocalAddr() net.Addr {
+func (c *PacketConnWrapper) LocalAddr() net.Addr {
 	return c.conn.LocalAddr()
 }
 
-func (c *packetConnWrapper) RemoteAddr() net.Addr {
+func (c *PacketConnWrapper) RemoteAddr() net.Addr {
 	return c.dest
 }
 
-func (c *packetConnWrapper) Write(p []byte) (int, error) {
+func (c *PacketConnWrapper) Write(p []byte) (int, error) {
 	return c.conn.WriteTo(p, c.dest)
 }
 
-func (c *packetConnWrapper) Read(p []byte) (int, error) {
+func (c *PacketConnWrapper) Read(p []byte) (int, error) {
 	n, _, err := c.conn.ReadFrom(p)
 	return n, err
 }
 
-func (c *packetConnWrapper) SetDeadline(t time.Time) error {
+func (c *PacketConnWrapper) SetDeadline(t time.Time) error {
 	return c.conn.SetDeadline(t)
 }
 
-func (c *packetConnWrapper) SetReadDeadline(t time.Time) error {
+func (c *PacketConnWrapper) SetReadDeadline(t time.Time) error {
 	return c.conn.SetReadDeadline(t)
 }
 
-func (c *packetConnWrapper) SetWriteDeadline(t time.Time) error {
+func (c *PacketConnWrapper) SetWriteDeadline(t time.Time) error {
 	return c.conn.SetWriteDeadline(t)
 }
 
