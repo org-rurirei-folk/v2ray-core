@@ -24,7 +24,7 @@ type DefaultSystemDialer struct {
 
 func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 	if addr.Address == nil || addr.Address == net.AnyIP {
-		return net.Addr{}, errors.New("empty src addr")
+		return nil, errors.New("empty addr")
 	}
 
 	switch addr.Network {
@@ -33,7 +33,7 @@ func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 		case net.Network_UDP:
 			return net.ResolveUDPAddr(addr.Network.SystemString(), addr.NetAddr())
 		default:
-			return net.Addr{}, errors.New("unknown network")
+			return nil, errors.New("unknown network")
 	}
 }
 
