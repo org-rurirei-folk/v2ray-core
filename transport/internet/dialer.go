@@ -77,7 +77,7 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 	} else {
 		src.Address = net.IPAddress([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 	}
-	if inbound := session.InboundFromContext(ctx); inbound != nil && inbound.Source.Port != nil {
+	if inbound := session.InboundFromContext(ctx); inbound != nil {
 		src.Port = inbound.Source.Port
 	} else {
 		src.Port = net.Port(0)
