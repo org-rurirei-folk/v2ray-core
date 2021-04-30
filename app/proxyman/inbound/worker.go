@@ -82,6 +82,8 @@ func (w *tcpWorker) callback(conn internet.Connection) {
 	if inbound == nil {
 		inbound = new(session.Inbound)
 		ctx = session.ContextWithInbound(ctx, inbound)
+	}
+	if inbound.Source.Address == nil || inbound.Gateway.Address == nil || len(inbound.Tag) == 0 {
 		inbound.Source = net.DestinationFromAddr(conn.RemoteAddr())
 		inbound.Gateway = net.TCPDestination(w.address, w.port)
 		inbound.Tag = w.tag
@@ -306,6 +308,8 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 			if inbound == nil {
 				inbound = new(session.Inbound)
 				ctx = session.ContextWithInbound(ctx, inbound)
+			}
+			if inbound.Source.Address == nil || inbound.Gateway.Address == nil || len(inbound.Tag) == 0 {
 				inbound.Source = source
 				inbound.Gateway = net.UDPDestination(w.address, w.port)
 				inbound.Tag = w.tag
@@ -440,6 +444,8 @@ func (w *dsWorker) callback(conn internet.Connection) {
 	if inbound == nil {
 		inbound = new(session.Inbound)
 		ctx = session.ContextWithInbound(ctx, inbound)
+	}
+	if inbound.Source.Address == nil || inbound.Gateway.Address == nil || len(inbound.Tag) == 0 {
 		inbound.Source = net.DestinationFromAddr(conn.RemoteAddr())
 		inbound.Gateway = net.UnixDestination(w.address)
 		inbound.Tag = w.tag
