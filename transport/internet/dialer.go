@@ -87,6 +87,9 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 	if outbound := session.OutboundFromContext(ctx); outbound != nil {
 		src = outbound.Gateway
 	}
+	if inbound := session.InboundFromContext(ctx); inbound != nil {
+		src = inbound.Source
+	}
 
 	if transportLayerOutgoingTag := session.GetTransportLayerProxyTagFromContext(ctx); transportLayerOutgoingTag != "" {
 		return DialTaggedOutbound(ctx, dest, transportLayerOutgoingTag)
