@@ -415,6 +415,14 @@ func (c *Config) Override(o *Config, fn string) {
 		c.FakeDNS = o.FakeDNS
 	}
 
+	if o.BrowserForwarder != nil {
+		c.BrowserForwarder = o.BrowserForwarder
+	}
+
+	if o.Observatory != nil {
+		c.Observatory = o.Observatory
+	}
+
 	// deprecated attrs... keep them for now
 	if o.InboundConfig != nil {
 		c.InboundConfig = o.InboundConfig
