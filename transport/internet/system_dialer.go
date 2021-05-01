@@ -22,7 +22,7 @@ type DefaultSystemDialer struct {
 	controllers []controller
 }
 
-func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
+func resolveNetAddr(addr net.Destination) (net.Addr, error) {
 	if addr.Address == nil {
 		return nil, errors.New("empty addr")
 		// addr.Address = net.AnyIP
@@ -48,7 +48,7 @@ func hasBindAddr(sockopt *SocketConfig) bool {
 
 func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
 	if !hasBindAddr(sockopt) {
-		srcAddr, err := ResolveNetAddr(src)
+		srcAddr, err := resolveNetAddr(src)
 		if err != nil {
 			return nil, err
 		}
@@ -56,7 +56,7 @@ func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *Sock
 		if err != nil {
 			return nil, err
 		}
-		destAddr, err := ResolveNetAddr(dest)
+		destAddr, err := resolveNetAddr(dest)
 		if err != nil {
 			return nil, err
 		}
@@ -70,7 +70,7 @@ func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *Sock
 }
 
 func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-	srcAddr, err := ResolveNetAddr(src)
+	srcAddr, err := resolveNetAddr(src)
 	if err != nil {
 		return nil, err
 	}
