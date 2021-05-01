@@ -70,11 +70,9 @@ func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *Sock
 }
 
 func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-}
-
-func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-	if dest.Network == net.Network_UDP {
-		return HandleDialUDP(ctx, src, dest, sockopt)
+	srcAddr, err := ResolveNetAddr(src)
+	if err != nil {
+		return nil, err
 	}
 
 	dialer := &net.Dialer{
