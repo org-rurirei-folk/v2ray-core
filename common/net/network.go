@@ -1,5 +1,17 @@
 package net
 
+// ParseNetwork converts a network from its string presentation.
+func ParseNetwork(network string) Network {
+	switch network {
+	case "tcp":
+		return Network_TCP
+	case "udp":
+		return Network_UDP
+	default:
+		panic("unsupported network")
+	}
+}
+
 func (n Network) SystemString() string {
 	switch n {
 	case Network_TCP:
