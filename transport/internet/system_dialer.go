@@ -30,7 +30,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destinatio
 	}
 
 	if dest.IsValid() {
-		return HandleDial(ctx, src, dest, sockopt)
+		return HandleDial(ctx, src, dest, sockopt, d.controllers)
 	}
 
 	return nil, errors.New("invalid dest network")
@@ -83,7 +83,7 @@ func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *Sock
 	return nil, errors.New("found sockopt")
 }
 
-func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig, controllers []controller) (net.Conn, error) {
 	srcAddr, err := resolveNetAddr(src)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketC
 		LocalAddr: srcAddr,
 	}
 
-	if sockopt != nil || len(d.controllers) > 0 {
+	if sockopt != nil || len(controllers) > 0 {
 		dialer.Control = func(network, address string, c syscall.RawConn) error {
 			return c.Control(func(fd uintptr) {
 				if sockopt != nil {
@@ -109,7 +109,7 @@ func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketC
 					}
 				}
 
-				for _, ctl := range d.controllers {
+				for _, ctl := range controllers {
 					if err := ctl(network, address, fd); err != nil {
 						newError("failed to apply external controller").Base(err).WriteToLog(session.ExportIDToError(ctx))
 					}
