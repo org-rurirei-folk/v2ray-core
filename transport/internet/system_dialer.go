@@ -22,6 +22,20 @@ type DefaultSystemDialer struct {
 	controllers []controller
 }
 
+func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+	if dest.Network == net.Network_UDP {
+		if conn, err := HandleDialUDP(ctx, src, dest, sockopt); err == nil {
+			return conn, nil
+		}
+	}
+
+	if dest.IsValid() {
+		return HandleDial(ctx, src, dest, sockopt)
+	}
+
+	return nil, errors.New("invalid dest network")
+}
+
 func resolveNetAddr(addr net.Destination) (net.Addr, error) {
 	if addr.Address == nil {
 		return nil, errors.New("empty addr")
@@ -169,7 +183,7 @@ func (v *SimpleSystemDialer) Dial(ctx context.Context, src, dest net.Destination
 // v2ray:api:stable
 func UseAlternativeSystemDialer(dialer SystemDialer) {
 	if dialer == nil {
-		effectiveSystemDialer = &DefaultSystemDialer{}
+		dialer = &DefaultSystemDialer{}
 	}
 	effectiveSystemDialer = dialer
 }
