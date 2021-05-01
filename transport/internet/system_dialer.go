@@ -42,17 +42,16 @@ func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 	}
 }
 
-func HasBindAddr(sockopt *SocketConfig) bool {
+func hasBindAddr(sockopt *SocketConfig) bool {
 	return sockopt != nil && len(sockopt.BindAddress) > 0 && sockopt.BindPort > 0
 }
 
-func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-	srcAddr, err := ResolveNetAddr(src)
-	if err != nil {
-		return nil, err
-	}
-
-	if dest.Network == net.Network_UDP && !HasBindAddr(sockopt) {
+func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+	if !hasBindAddr(sockopt) {
+		srcAddr, err := ResolveNetAddr(src)
+		if err != nil {
+			return nil, err
+		}
 		packetConn, err := ListenSystemPacket(ctx, srcAddr, sockopt)
 		if err != nil {
 			return nil, err
@@ -65,6 +64,17 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destinatio
 			conn: packetConn,
 			dest: destAddr,
 		}, nil
+	}
+
+	return nil, errors.New("found sockopt")
+}
+
+func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+}
+
+func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+	if dest.Network == net.Network_UDP {
+		return HandleDialUDP(ctx, src, dest, sockopt)
 	}
 
 	dialer := &net.Dialer{
@@ -80,7 +90,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destinatio
 					if err := applyOutboundSocketOptions(network, address, fd, sockopt); err != nil {
 						newError("failed to apply socket options").Base(err).WriteToLog(session.ExportIDToError(ctx))
 					}
-					if dest.Network == net.Network_UDP && HasBindAddr(sockopt) {
+					if dest.Network == net.Network_UDP && hasBindAddr(sockopt) {
 						if err := bindAddr(fd, sockopt.BindAddress, sockopt.BindPort); err != nil {
 							newError("failed to bind source address to ", sockopt.BindAddress).Base(err).WriteToLog(session.ExportIDToError(ctx))
 						}
