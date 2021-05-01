@@ -73,9 +73,18 @@ func (w *tcpWorker) callback(conn internet.Connection) {
 			dest = net.DestinationFromAddr(conn.LocalAddr())
 		}
 		if dest.IsValid() {
-			ctx = session.ContextWithOutbound(ctx, &session.Outbound{
-				Target: dest,
-			})
+
+			outbound := session.OutboundFromContext(ctx)
+			if outbound == nil {
+				outbound = new(session.Outbound)
+				ctx = session.ContextWithOutbound(ctx, outbound)
+			}
+			if outbound.Gateway.Address == nil {
+				outbound.Gateway.Address = net.AnyIP
+				outbound.Gateway.Port = net.Port(0)
+				outbound.Gateway.Network = dest.Network
+			}
+			outbound.Target = dest
 		}
 	}
 	inbound := session.InboundFromContext(ctx)
@@ -300,9 +309,17 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 			ctx = session.ContextWithID(ctx, sid)
 
 			if originalDest.IsValid() {
-				ctx = session.ContextWithOutbound(ctx, &session.Outbound{
-					Target: originalDest,
-				})
+				outbound := session.OutboundFromContext(ctx)
+				if outbound == nil {
+					outbound = new(session.Outbound)
+					ctx = session.ContextWithOutbound(ctx, outbound)
+				}
+				if outbound.Gateway.Address == nil {
+					outbound.Gateway.Address = net.AnyIP
+					outbound.Gateway.Port = net.Port(0)
+					outbound.Gateway.Network = dest.Network
+				}
+				outbound.Target = originalDest
 			}
 			inbound := session.InboundFromContext(ctx)
 			if inbound == nil {
