@@ -317,7 +317,7 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 				if outbound.Gateway.Address == nil {
 					outbound.Gateway.Address = net.AnyIP
 					outbound.Gateway.Port = net.Port(0)
-					outbound.Gateway.Network = dest.Network
+					outbound.Gateway.Network = originalDest.Network
 				}
 				outbound.Target = originalDest
 			}
