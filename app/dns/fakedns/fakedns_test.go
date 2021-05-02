@@ -22,7 +22,7 @@ func TestFakeDnsHolderCreateMapping(t *testing.T) {
 	common.Must(err)
 
 	addr := fkdns.GetFakeIPForDomain("fakednstest.v2fly.org")
-	assert.Equal(t, "198.18.0.0", addr[0].IP().String())
+	assert.Equal(t, "240.0.0.0", addr[0].IP().String())
 }
 
 func TestFakeDnsHolderCreateMappingMany(t *testing.T) {
@@ -30,10 +30,10 @@ func TestFakeDnsHolderCreateMappingMany(t *testing.T) {
 	common.Must(err)
 
 	addr := fkdns.GetFakeIPForDomain("fakednstest.v2fly.org")
-	assert.Equal(t, "198.18.0.0", addr[0].IP().String())
+	assert.Equal(t, "240.0.0.0", addr[0].IP().String())
 
 	addr2 := fkdns.GetFakeIPForDomain("fakednstest2.v2fly.org")
-	assert.Equal(t, "198.18.0.1", addr2[0].IP().String())
+	assert.Equal(t, "240.0.0.1", addr2[0].IP().String())
 }
 
 func TestFakeDnsHolderCreateMappingManyAndResolve(t *testing.T) {
@@ -42,21 +42,21 @@ func TestFakeDnsHolderCreateMappingManyAndResolve(t *testing.T) {
 
 	{
 		addr := fkdns.GetFakeIPForDomain("fakednstest.v2fly.org")
-		assert.Equal(t, "198.18.0.0", addr[0].IP().String())
+		assert.Equal(t, "240.0.0.0", addr[0].IP().String())
 	}
 
 	{
 		addr2 := fkdns.GetFakeIPForDomain("fakednstest2.v2fly.org")
-		assert.Equal(t, "198.18.0.1", addr2[0].IP().String())
+		assert.Equal(t, "240.0.0.1", addr2[0].IP().String())
 	}
 
 	{
-		result := fkdns.GetDomainFromFakeDNS(net.ParseAddress("198.18.0.0"))
+		result := fkdns.GetDomainFromFakeDNS(net.ParseAddress("240.0.0.0"))
 		assert.Equal(t, "fakednstest.v2fly.org", result)
 	}
 
 	{
-		result := fkdns.GetDomainFromFakeDNS(net.ParseAddress("198.18.0.1"))
+		result := fkdns.GetDomainFromFakeDNS(net.ParseAddress("240.0.0.1"))
 		assert.Equal(t, "fakednstest2.v2fly.org", result)
 	}
 }
@@ -66,10 +66,10 @@ func TestFakeDnsHolderCreateMappingManySingleDomain(t *testing.T) {
 	common.Must(err)
 
 	addr := fkdns.GetFakeIPForDomain("fakednstest.v2fly.org")
-	assert.Equal(t, "198.18.0.0", addr[0].IP().String())
+	assert.Equal(t, "240.0.0.0", addr[0].IP().String())
 
 	addr2 := fkdns.GetFakeIPForDomain("fakednstest.v2fly.org")
-	assert.Equal(t, "198.18.0.0", addr2[0].IP().String())
+	assert.Equal(t, "240.0.0.0", addr2[0].IP().String())
 }
 
 func TestFakeDnsHolderCreateMappingAndRollOver(t *testing.T) {
