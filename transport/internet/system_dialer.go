@@ -91,7 +91,6 @@ func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketC
 
 	dialer := &net.Dialer{
 		Timeout:   time.Second * 16,
-		DualStack: true,
 		LocalAddr: srcAddr,
 	}
 
