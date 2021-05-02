@@ -33,6 +33,10 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destinatio
 }
 
 func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
+	if addr.Address != nil && !addr.IsValid() {
+		return nil, errors.New("invalid addr")
+	}
+
 	if addr.Address == nil || addr.Address == net.AnyIP {
 		// return nil, errors.New("empty addr")
 		return nil, nil
