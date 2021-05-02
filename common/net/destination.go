@@ -6,7 +6,7 @@ import (
 )
 
 // AnyDestination is the value for non-null src with net.AnyIP
-func AnyDestination(Network) Destination {
+func AnyDestination(network Network) Destination {
 	return Destination{
 		Address: AnyIP,
 		Port: Port(0),
