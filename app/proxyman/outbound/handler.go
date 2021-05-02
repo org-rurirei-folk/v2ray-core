@@ -207,6 +207,8 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 		}
 
 		if h.senderSettings.Via != nil {
+			outbound.Gateway.Port = net.Port(0)
+			outbound.Gateway.Network = dest.Network
 			outbound.Gateway.Address = h.senderSettings.Via.AsAddress()
 		}
 	}
