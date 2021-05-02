@@ -22,6 +22,10 @@ type DefaultSystemDialer struct {
 }
 
 func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+	if (src.Address != nil && (!src.IsValid() || src.Network != dest.Network)) || !dest.IsValid() {
+		return nil, newError("invalid src or dest")
+	}
+
 	if dest.Network == net.Network_UDP && !HasBindAddr(sockopt) {
 		return HandleDialUDP(ctx, src, dest, sockopt)
 	}
