@@ -33,13 +33,13 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destinatio
 }
 
 func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
-	if addr.Address != nil && !addr.IsValid() {
-		return nil, errors.New("invalid addr")
-	}
-
-	if addr.Address == nil || addr.Address == net.AnyIP {
+	/* if addr.Address == nil || addr.Address == net.AnyIP {
 		// return nil, errors.New("empty addr")
 		return nil, nil
+	} */
+
+	if addr.Address == nil {
+		addr = net.AnyDestination(addr.Network)
 	}
 
 	switch addr.Network {
@@ -57,6 +57,7 @@ func HasBindAddr(sockopt *SocketConfig) bool {
 }
 
 func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+	src.Network = dest.Network
 	srcAddr, err := ResolveNetAddr(src)
 	if err != nil {
 		return nil, err
@@ -79,6 +80,7 @@ func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *Sock
 }
 
 func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig, controllers []controller) (net.Conn, error) {
+	src.Network = dest.Network
 	srcAddr, err := ResolveNetAddr(src)
 	if err != nil {
 		return nil, err
