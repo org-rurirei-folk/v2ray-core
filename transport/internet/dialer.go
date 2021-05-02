@@ -83,6 +83,7 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 		src.Port = net.Port(0)
 	} */
 
+	// possible nullcheck needed.
 	var src net.Destination
 	if outbound := session.OutboundFromContext(ctx); outbound != nil {
 		src = outbound.Gateway
