@@ -163,11 +163,8 @@ func (h *Handler) Address() net.Address {
 
 // Dial implements internet.Dialer.
 func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Connection, error) {
-	outbound := session.OutboundFromContext(ctx)
-	if outbound == nil {
-		outbound = new(session.Outbound)
-		ctx = session.ContextWithOutbound(ctx, outbound)
-	}
+	outbound := new(session.Outbound)
+	ctx = session.ContextWithOutbound(ctx, outbound)
 	// outbound.Gateway is non-null for internet.DialSystem
 	outbound.Gateway = net.AnyDestination(dest.Network)
 
