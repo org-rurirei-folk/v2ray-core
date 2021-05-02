@@ -23,7 +23,7 @@ type DefaultSystemDialer struct {
 }
 
 func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-	if dest.Network == net.Network_UDP {
+	if dest.Network == net.Network_UDP && !hasBindAddr(sockopt) {
 		if conn, err := HandleDialUDP(ctx, src, dest, sockopt); err == nil {
 			return conn, nil
 		}
@@ -57,26 +57,22 @@ func hasBindAddr(sockopt *SocketConfig) bool {
 }
 
 func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-	if !hasBindAddr(sockopt) {
-		srcAddr, err := resolveNetAddr(src)
-		if err != nil {
-			return nil, err
-		}
-		packetConn, err := ListenSystemPacket(ctx, srcAddr, sockopt)
-		if err != nil {
-			return nil, err
-		}
-		destAddr, err := resolveNetAddr(dest)
-		if err != nil {
-			return nil, err
-		}
-		return &packetConnWrapper{
-			conn: packetConn,
-			dest: destAddr,
-		}, nil
+	srcAddr, err := resolveNetAddr(src)
+	if err != nil {
+		return nil, err
 	}
-
-	return nil, errors.New("found sockopt")
+	packetConn, err := ListenSystemPacket(ctx, srcAddr, sockopt)
+	if err != nil {
+		return nil, err
+	}
+	destAddr, err := resolveNetAddr(dest)
+	if err != nil {
+		return nil, err
+	}
+	return &packetConnWrapper{
+		conn: packetConn,
+		dest: destAddr,
+	}, nil
 }
 
 func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig, controllers []controller) (net.Conn, error) {
