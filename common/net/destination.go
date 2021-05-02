@@ -9,7 +9,7 @@ import (
 func AnyDestination(network Network) Destination {
 	return Destination{
 		Address: AnyIP,
-		Port: Port(0),
+		Port:    Port(0),
 		Network: network,
 	}
 }
