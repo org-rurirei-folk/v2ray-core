@@ -73,7 +73,6 @@ func (w *tcpWorker) callback(conn internet.Connection) {
 			dest = net.DestinationFromAddr(conn.LocalAddr())
 		}
 		if dest.IsValid() {
-
 			outbound := session.OutboundFromContext(ctx)
 			if outbound == nil {
 				outbound = new(session.Outbound)
