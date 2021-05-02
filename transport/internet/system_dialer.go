@@ -23,7 +23,7 @@ type DefaultSystemDialer struct {
 
 func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
 	if src.Address != nil && src.Network != dest.Network {
-		return nil, newError("invalid src or dest")
+		return nil, newError("invalid src or dest ", src, dest)
 	}
 
 	if dest.Network == net.Network_UDP && !HasBindAddr(sockopt) {
@@ -39,11 +39,11 @@ func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 	} */
 
 	if addr.Address == nil {
-		return nil, newError("empty addr")
+		return nil, newError("empty addr ", addr)
 	}
 
 	if !addr.IsValid() {
-		return nil, newError("invalid addr")
+		return nil, newError("invalid addr ", addr)
 	}
 
 	switch addr.Network {
@@ -52,7 +52,7 @@ func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 	case net.Network_UDP:
 		return net.ResolveUDPAddr(addr.Network.SystemString(), addr.NetAddr())
 	default:
-		return nil, newError("unsupported network")
+		return nil, newError("unsupported network ", addr)
 	}
 }
 
