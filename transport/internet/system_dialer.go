@@ -29,11 +29,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destinatio
 		}
 	}
 
-	if dest.IsValid() {
-		return HandleDial(ctx, src, dest, sockopt, d.controllers)
-	}
-
-	return nil, errors.New("invalid dest network")
+	return HandleDial(ctx, src, dest, sockopt, d.controllers)
 }
 
 func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
