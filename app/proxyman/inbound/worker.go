@@ -73,29 +73,16 @@ func (w *tcpWorker) callback(conn internet.Connection) {
 			dest = net.DestinationFromAddr(conn.LocalAddr())
 		}
 		if dest.IsValid() {
-			outbound := session.OutboundFromContext(ctx)
-			if outbound == nil {
-				outbound = new(session.Outbound)
-				ctx = session.ContextWithOutbound(ctx, outbound)
-			}
-			/* if outbound.Gateway.Address == nil {
-				outbound.Gateway.Address = net.AnyIP
-				outbound.Gateway.Port = net.Port(0)
-				outbound.Gateway.Network = dest.Network
-			} */
-			outbound.Target = dest
+			ctx = session.ContextWithOutbound(ctx, &session.Outbound{
+				Target: dest,
+			})
 		}
 	}
-	inbound := session.InboundFromContext(ctx)
-	if inbound == nil {
-		inbound = new(session.Inbound)
-		ctx = session.ContextWithInbound(ctx, inbound)
-	}
-	if inbound.Source.Address == nil || inbound.Gateway.Address == nil || len(inbound.Tag) == 0 {
-		inbound.Source = net.DestinationFromAddr(conn.RemoteAddr())
-		inbound.Gateway = net.TCPDestination(w.address, w.port)
-		inbound.Tag = w.tag
-	}
+	ctx = session.ContextWithInbound(ctx, &session.Inbound{
+		Source:  net.DestinationFromAddr(conn.RemoteAddr()),
+		Gateway: net.TCPDestination(w.address, w.port),
+		Tag:     w.tag,
+	})
 	content := new(session.Content)
 	if w.sniffingConfig != nil {
 		content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
@@ -308,28 +295,15 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 			ctx = session.ContextWithID(ctx, sid)
 
 			if originalDest.IsValid() {
-				outbound := session.OutboundFromContext(ctx)
-				if outbound == nil {
-					outbound = new(session.Outbound)
-					ctx = session.ContextWithOutbound(ctx, outbound)
-				}
-				/* if outbound.Gateway.Address == nil {
-					outbound.Gateway.Address = net.AnyIP
-					outbound.Gateway.Port = net.Port(0)
-					outbound.Gateway.Network = originalDest.Network
-				} */
-				outbound.Target = originalDest
+				ctx = session.ContextWithOutbound(ctx, &session.Outbound{
+					Target: originalDest,
+				})
 			}
-			inbound := session.InboundFromContext(ctx)
-			if inbound == nil {
-				inbound = new(session.Inbound)
-				ctx = session.ContextWithInbound(ctx, inbound)
-			}
-			if inbound.Source.Address == nil || inbound.Gateway.Address == nil || len(inbound.Tag) == 0 {
-				inbound.Source = source
-				inbound.Gateway = net.UDPDestination(w.address, w.port)
-				inbound.Tag = w.tag
-			}
+			ctx = session.ContextWithInbound(ctx, &session.Inbound{
+				Source:  source,
+				Gateway: net.UDPDestination(w.address, w.port),
+				Tag:     w.tag,
+			})
 			content := new(session.Content)
 			if w.sniffingConfig != nil {
 				content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
@@ -456,16 +430,11 @@ func (w *dsWorker) callback(conn internet.Connection) {
 	sid := session.NewID()
 	ctx = session.ContextWithID(ctx, sid)
 
-	inbound := session.InboundFromContext(ctx)
-	if inbound == nil {
-		inbound = new(session.Inbound)
-		ctx = session.ContextWithInbound(ctx, inbound)
-	}
-	if inbound.Source.Address == nil || inbound.Gateway.Address == nil || len(inbound.Tag) == 0 {
-		inbound.Source = net.DestinationFromAddr(conn.RemoteAddr())
-		inbound.Gateway = net.UnixDestination(w.address)
-		inbound.Tag = w.tag
-	}
+	ctx = session.ContextWithInbound(ctx, &session.Inbound{
+		Source:  net.DestinationFromAddr(conn.RemoteAddr()),
+		Gateway: net.UnixDestination(w.address),
+		Tag:     w.tag,
+	})
 	content := new(session.Content)
 	if w.sniffingConfig != nil {
 		content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
