@@ -163,18 +163,13 @@ func (h *Handler) Address() net.Address {
 
 // Dial implements internet.Dialer.
 func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Connection, error) {
-	outbound := session.OutboundFromContext(ctx)
-	if outbound == nil {
-		outbound = new(session.Outbound)
-		ctx = session.ContextWithOutbound(ctx, outbound)
-	}
-	/* if outbound.Gateway.Address == nil {
-		outbound.Gateway.Address = net.AnyIP
-		outbound.Gateway.Port = net.Port(0)
-		outbound.Gateway.Network = dest.Network
-	} */
-
 	if h.senderSettings != nil {
+		outbound := session.OutboundFromContext(ctx)
+		if outbound == nil {
+			outbound = new(session.Outbound)
+			ctx = session.ContextWithOutbound(ctx, outbound)
+		}
+
 		if h.senderSettings.ProxySettings.HasTag() {
 			if !h.senderSettings.ProxySettings.TransportLayerProxy {
 				tag := h.senderSettings.ProxySettings.Tag
@@ -207,7 +202,7 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 		}
 
 		if h.senderSettings.Via != nil {
-			outbound.Gateway.Port = net.Port(0)
+			outbound.Gateway.Port = net.AnyDestination(dest.Network).Port
 			outbound.Gateway.Network = dest.Network
 			outbound.Gateway.Address = h.senderSettings.Via.AsAddress()
 		}
