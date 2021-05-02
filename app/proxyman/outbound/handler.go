@@ -165,8 +165,9 @@ func (h *Handler) Address() net.Address {
 func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Connection, error) {
 	outbound := new(session.Outbound)
 	ctx = session.ContextWithOutbound(ctx, outbound)
+	// outbound may be nil
 	// outbound.Gateway is non-null for internet.DialSystem
-	outbound.Gateway = net.AnyDestination(dest.Network)
+	// outbound.Gateway = net.AnyDestination(dest.Network)
 
 	if h.senderSettings != nil {
 		if h.senderSettings.ProxySettings.HasTag() {
@@ -201,6 +202,7 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 		}
 
 		if h.senderSettings.Via != nil {
+			outbound.Gateway = net.AnyDestination(dest.Network)
 			outbound.Gateway.Address = h.senderSettings.Via.AsAddress()
 		}
 	}
