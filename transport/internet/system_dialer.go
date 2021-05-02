@@ -37,12 +37,8 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destinatio
 }
 
 func resolveNetAddr(addr net.Destination) (net.Addr, error) {
-	if addr.Address == nil {
-		return nil, errors.New("empty addr")
-		// addr.Address = net.AnyIP
-	}
-
-	if addr.Address == net.AnyIP {
+	if addr.Address == nil || addr.Address == net.AnyIP {
+		// return nil, errors.New("empty addr")
 		return nil, nil
 	}
 
