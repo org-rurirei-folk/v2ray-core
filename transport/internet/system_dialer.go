@@ -22,7 +22,7 @@ type DefaultSystemDialer struct {
 }
 
 func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-	if (src.Address != nil && (!src.IsValid() || src.Network != dest.Network)) || !dest.IsValid() {
+	if src.Address != nil && src.Network != dest.Network {
 		return nil, newError("invalid src or dest")
 	}
 
