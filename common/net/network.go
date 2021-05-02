@@ -8,7 +8,7 @@ func ParseNetwork(network string) (Network, error) {
 	case "udp":
 		return Network_UDP, nil
 	default:
-		return Network_UDP, newError("unsupported network")
+		return Network_UDP, newError("unsupported network ", network)
 	}
 }
 
