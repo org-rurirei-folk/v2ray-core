@@ -42,10 +42,6 @@ func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 		return nil, newError("empty addr ", addr)
 	}
 
-	if !addr.IsValid() {
-		return nil, newError("invalid addr ", addr)
-	}
-
 	switch addr.Network {
 	case net.Network_TCP:
 		return net.ResolveTCPAddr(addr.Network.SystemString(), addr.NetAddr())
