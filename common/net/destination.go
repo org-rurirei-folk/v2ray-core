@@ -5,15 +5,6 @@ import (
 	"strings"
 )
 
-// AnyDestination is the value for non-null src with net.AnyIP
-func AnyDestination(network Network) Destination {
-	return Destination{
-		Address: AnyIP,
-		Port:    Port(0),
-		Network: network,
-	}
-}
-
 // Destination represents a network destination including address and protocol (tcp / udp).
 type Destination struct {
 	Address Address
@@ -94,6 +85,15 @@ func UnixDestination(address Address) Destination {
 	return Destination{
 		Network: Network_UNIX,
 		Address: address,
+	}
+}
+
+// AnyDestination is the value for non-null src with net.AnyIP
+func AnyDestination(network Network) Destination {
+	return Destination{
+		Address: AnyIP,
+		Port:    Port(0),
+		Network: network,
 	}
 }
 
