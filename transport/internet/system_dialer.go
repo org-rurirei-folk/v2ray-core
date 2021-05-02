@@ -2,7 +2,6 @@ package internet
 
 import (
 	"context"
-	"errors"
 	"syscall"
 	"time"
 
@@ -34,7 +33,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destinatio
 
 func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 	/* if addr.Address == nil || addr.Address == net.AnyIP {
-		// return nil, errors.New("empty addr")
+		// return nil, newError("empty addr")
 		return nil, nil
 	} */
 
@@ -48,7 +47,7 @@ func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 	case net.Network_UDP:
 		return net.ResolveUDPAddr(addr.Network.SystemString(), addr.NetAddr())
 	default:
-		return nil, errors.New("unknown network")
+		return nil, newError("unknown network")
 	}
 }
 
