@@ -52,7 +52,7 @@ func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 	case net.Network_UDP:
 		return net.ResolveUDPAddr(addr.Network.SystemString(), addr.NetAddr())
 	default:
-		return nil, newError("unknown network")
+		return nil, newError("unsupported network")
 	}
 }
 
