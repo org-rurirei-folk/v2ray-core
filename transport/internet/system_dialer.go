@@ -38,6 +38,10 @@ func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 		return nil, newError("empty addr")
 	}
 
+	if !addr.IsValid() {
+		return nil, newError("invalid addr")
+	}
+
 	/* if addr.Address == nil {
 		addr = net.AnyDestination(addr.Network)
 	} */
