@@ -23,7 +23,7 @@ type DefaultSystemDialer struct {
 }
 
 func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-	if dest.Network == net.Network_UDP && !hasBindAddr(sockopt) {
+	if dest.Network == net.Network_UDP && !HasBindAddr(sockopt) {
 		if conn, err := HandleDialUDP(ctx, src, dest, sockopt); err == nil {
 			return conn, nil
 		}
@@ -36,7 +36,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destinatio
 	return nil, errors.New("invalid dest network")
 }
 
-func resolveNetAddr(addr net.Destination) (net.Addr, error) {
+func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 	if addr.Address == nil || addr.Address == net.AnyIP {
 		// return nil, errors.New("empty addr")
 		return nil, nil
@@ -52,12 +52,12 @@ func resolveNetAddr(addr net.Destination) (net.Addr, error) {
 	}
 }
 
-func hasBindAddr(sockopt *SocketConfig) bool {
+func HasBindAddr(sockopt *SocketConfig) bool {
 	return sockopt != nil && len(sockopt.BindAddress) > 0 && sockopt.BindPort > 0
 }
 
 func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-	srcAddr, err := resolveNetAddr(src)
+	srcAddr, err := ResolveNetAddr(src)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *Sock
 	if err != nil {
 		return nil, err
 	}
-	destAddr, err := resolveNetAddr(dest)
+	destAddr, err := ResolveNetAddr(dest)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *Sock
 }
 
 func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig, controllers []controller) (net.Conn, error) {
-	srcAddr, err := resolveNetAddr(src)
+	srcAddr, err := ResolveNetAddr(src)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketC
 					if err := applyOutboundSocketOptions(network, address, fd, sockopt); err != nil {
 						newError("failed to apply socket options").Base(err).WriteToLog(session.ExportIDToError(ctx))
 					}
-					if dest.Network == net.Network_UDP && hasBindAddr(sockopt) {
+					if dest.Network == net.Network_UDP && HasBindAddr(sockopt) {
 						if err := bindAddr(fd, sockopt.BindAddress, sockopt.BindPort); err != nil {
 							newError("failed to bind source address to ", sockopt.BindAddress).Base(err).WriteToLog(session.ExportIDToError(ctx))
 						}
