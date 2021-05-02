@@ -42,14 +42,24 @@ func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
 		return nil, nil
 	}
 
-	switch addr.Network {
+	if addr.Network == net.Network_UDP {
+		return net.ResolveUDPAddr(addr.Network.SystemString(), addr.NetAddr())
+	}
+
+	if addr.Network == net.Network_TCP {
+		return net.ResolveTCPAddr(addr.Network.SystemString(), addr.NetAddr())
+	}
+
+	return nil, errors.New("unknown network")
+
+	/* switch addr.Network {
 		case net.Network_TCP:
 			return net.ResolveTCPAddr(addr.Network.SystemString(), addr.NetAddr())
 		case net.Network_UDP:
 			return net.ResolveUDPAddr(addr.Network.SystemString(), addr.NetAddr())
 		default:
 			return nil, errors.New("unknown network")
-	}
+	} */
 }
 
 func HasBindAddr(sockopt *SocketConfig) bool {
