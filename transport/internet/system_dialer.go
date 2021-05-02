@@ -61,14 +61,17 @@ func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *Sock
 	if err != nil {
 		return nil, err
 	}
-	packetConn, err := ListenSystemPacket(ctx, srcAddr, sockopt)
-	if err != nil {
-		return nil, err
-	}
+
 	destAddr, err := ResolveNetAddr(dest)
 	if err != nil {
 		return nil, err
 	}
+
+	packetConn, err := ListenSystemPacket(ctx, srcAddr, sockopt)
+	if err != nil {
+		return nil, err
+	}
+
 	return &packetConnWrapper{
 		conn: packetConn,
 		dest: destAddr,
