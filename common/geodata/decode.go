@@ -11,7 +11,6 @@ package geodata
 
 import (
 	"io"
-	"os"
 	"runtime"
 	"strings"
 
@@ -31,7 +30,7 @@ var (
 	errCodeNotFound                 = errors.New("code not found")
 )
 
-func emitBytes(f *os.File, code string) ([]byte, error) {
+func emitBytes(f io.ReadCloser, code string) ([]byte, error) {
 	count := 1
 	isInner := false
 	tempContainer := make([]byte, 0, 5)
