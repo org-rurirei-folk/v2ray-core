@@ -163,14 +163,6 @@ func (h *Handler) Address() net.Address {
 
 // Dial implements internet.Dialer.
 func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Connection, error) {
-	outbound := session.OutboundFromContext(ctx)
-	if outbound == nil {
-		outbound = new(session.Outbound)
-		ctx = session.ContextWithOutbound(ctx, outbound)
-	}
-	// outbound.Gateway is non-null for internet.DialSystem
-	outbound.Gateway = net.AnyDestination(dest.Network)
-
 	if h.senderSettings != nil {
 		if h.senderSettings.ProxySettings.HasTag() {
 			if !h.senderSettings.ProxySettings.TransportLayerProxy {
@@ -178,7 +170,9 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 				handler := h.outboundManager.GetHandler(tag)
 				if handler != nil {
 					newError("proxying to ", tag, " for dest ", dest).AtDebug().WriteToLog(session.ExportIDToError(ctx))
-					outbound.Target = dest
+					ctx = session.ContextWithOutbound(ctx, &session.Outbound{
+						Target: dest,
+					})
 
 					opts := pipe.OptionsFromContext(ctx)
 					uplinkReader, uplinkWriter := pipe.New(opts...)
@@ -204,6 +198,12 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 		}
 
 		if h.senderSettings.Via != nil {
+			outbound := session.OutboundFromContext(ctx)
+			if outbound == nil {
+				outbound = new(session.Outbound)
+				ctx = session.ContextWithOutbound(ctx, outbound)
+			}
+			outbound.Gateway = net.AnyDestination(dest.Network)
 			outbound.Gateway.Address = h.senderSettings.Via.AsAddress()
 		}
 	}
