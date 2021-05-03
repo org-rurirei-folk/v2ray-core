@@ -14,79 +14,98 @@ var (
 )
 
 type SystemDialer interface {
-	Dial(ctx context.Context, source net.Address, destination net.Destination, sockopt *SocketConfig) (net.Conn, error)
+	Dial(ctx context.Context, source, destination net.Destination, sockopt *SocketConfig) (net.Conn, error)
 }
 
 type DefaultSystemDialer struct {
 	controllers []controller
 }
 
-func resolveSrcAddr(network net.Network, src net.Address) net.Addr {
-	if src == nil || src == net.AnyIP {
-		return nil
+func (d *DefaultSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+	if src.Address != nil && src.Network != dest.Network {
+		return nil, newError("invalid src or dest")
 	}
 
-	if network == net.Network_TCP {
-		return &net.TCPAddr{
-			IP:   src.IP(),
-			Port: 0,
-		}
+	if dest.Network == net.Network_UDP && !HasBindAddr(sockopt) {
+		return HandleDialUDP(ctx, src, dest, sockopt)
 	}
 
-	return &net.UDPAddr{
-		IP:   src.IP(),
-		Port: 0,
+	return HandleDial(ctx, src, dest, sockopt, d.controllers)
+}
+
+func ResolveNetAddr(addr net.Destination) (net.Addr, error) {
+	// addr.Network must not be nil
+	// as requires src.Network = dest.Network
+	if addr.Address == nil {
+		addr = net.AnyDestination(addr.Network)
+	}
+
+	/* if addr.Address == nil {
+		return nil, newError("empty addr")
+	} */
+
+	switch addr.Network {
+	case net.Network_TCP:
+		return net.ResolveTCPAddr(addr.Network.SystemString(), addr.NetAddr())
+	case net.Network_UDP:
+		return net.ResolveUDPAddr(addr.Network.SystemString(), addr.NetAddr())
+	default:
+		return nil, newError("unsupported network")
 	}
 }
 
-func hasBindAddr(sockopt *SocketConfig) bool {
+func HasBindAddr(sockopt *SocketConfig) bool {
 	return sockopt != nil && len(sockopt.BindAddress) > 0 && sockopt.BindPort > 0
 }
 
-func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-	if dest.Network == net.Network_UDP && !hasBindAddr(sockopt) {
-		srcAddr := resolveSrcAddr(net.Network_UDP, src)
-		if srcAddr == nil {
-			srcAddr = &net.UDPAddr{
-				IP:   []byte{0, 0, 0, 0},
-				Port: 0,
-			}
-		}
-		packetConn, err := ListenSystemPacket(ctx, srcAddr, sockopt)
-		if err != nil {
-			return nil, err
-		}
-		destAddr, err := net.ResolveUDPAddr("udp", dest.NetAddr())
-		if err != nil {
-			return nil, err
-		}
-		return &packetConnWrapper{
-			conn: packetConn,
-			dest: destAddr,
-		}, nil
+func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+	srcAddr, err := ResolveNetAddr(src)
+	if err != nil {
+		return nil, err
+	}
+
+	destAddr, err := ResolveNetAddr(dest)
+	if err != nil {
+		return nil, err
+	}
+
+	packetConn, err := ListenSystemPacket(ctx, srcAddr, sockopt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &packetConnWrapper{
+		conn: packetConn,
+		dest: destAddr,
+	}, nil
+}
+
+func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig, controllers []controller) (net.Conn, error) {
+	srcAddr, err := ResolveNetAddr(src)
+	if err != nil {
+		return nil, err
 	}
 
 	dialer := &net.Dialer{
 		Timeout:   time.Second * 16,
-		DualStack: true,
-		LocalAddr: resolveSrcAddr(dest.Network, src),
+		LocalAddr: srcAddr,
 	}
 
-	if sockopt != nil || len(d.controllers) > 0 {
+	if sockopt != nil || len(controllers) > 0 {
 		dialer.Control = func(network, address string, c syscall.RawConn) error {
 			return c.Control(func(fd uintptr) {
 				if sockopt != nil {
 					if err := applyOutboundSocketOptions(network, address, fd, sockopt); err != nil {
 						newError("failed to apply socket options").Base(err).WriteToLog(session.ExportIDToError(ctx))
 					}
-					if dest.Network == net.Network_UDP && hasBindAddr(sockopt) {
+					if dest.Network == net.Network_UDP && HasBindAddr(sockopt) {
 						if err := bindAddr(fd, sockopt.BindAddress, sockopt.BindPort); err != nil {
 							newError("failed to bind source address to ", sockopt.BindAddress).Base(err).WriteToLog(session.ExportIDToError(ctx))
 						}
 					}
 				}
 
-				for _, ctl := range d.controllers {
+				for _, ctl := range controllers {
 					if err := ctl(network, address, fd); err != nil {
 						newError("failed to apply external controller").Base(err).WriteToLog(session.ExportIDToError(ctx))
 					}
@@ -150,7 +169,7 @@ func WithAdapter(dialer SystemDialerAdapter) SystemDialer {
 	}
 }
 
-func (v *SimpleSystemDialer) Dial(ctx context.Context, src net.Address, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+func (v *SimpleSystemDialer) Dial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
 	return v.adapter.Dial(dest.Network.SystemString(), dest.NetAddr())
 }
 
@@ -160,7 +179,7 @@ func (v *SimpleSystemDialer) Dial(ctx context.Context, src net.Address, dest net
 // v2ray:api:stable
 func UseAlternativeSystemDialer(dialer SystemDialer) {
 	if dialer == nil {
-		effectiveSystemDialer = &DefaultSystemDialer{}
+		dialer = &DefaultSystemDialer{}
 	}
 	effectiveSystemDialer = dialer
 }
