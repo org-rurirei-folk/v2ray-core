@@ -30,7 +30,7 @@ var (
 	errCodeNotFound                 = errors.New("code not found")
 )
 
-func emitBytes(f io.ReadCloser, code string) ([]byte, error) {
+func emitBytes(f io.ReadSeekCloser, code string) ([]byte, error) {
 	count := 1
 	isInner := false
 	tempContainer := make([]byte, 0, 5)
@@ -107,7 +107,7 @@ Loop:
 }
 
 func Decode(filename, code string) ([]byte, error) {
-	f, err := filesystem.NewFileReader(filename)
+	f, err := filesystem.NewFileSeeker(filename)
 	if err != nil {
 		return nil, newError("failed to open file: ", filename).Base(err)
 	}
