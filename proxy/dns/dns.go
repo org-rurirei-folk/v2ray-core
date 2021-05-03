@@ -108,9 +108,6 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 	srcNetwork := outbound.Target.Network
 
 	dest := outbound.Target
-	if outbound.TargetToIP.Address != nil {
-		dest = outbound.TargetToIP
-	}
 	if h.server.Network != net.Network_Unknown {
 		dest.Network = h.server.Network
 	}
