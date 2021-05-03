@@ -18,6 +18,7 @@ import (
 	"google.golang.org/protobuf/encoding/protowire"
 
 	"github.com/v2fly/v2ray-core/v4/common/errors"
+	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
@@ -107,7 +108,7 @@ Loop:
 }
 
 func Decode(filename, code string) ([]byte, error) {
-	f, err := os.Open(filename)
+	f, err := filesystem.NewFileReader(filename)
 	if err != nil {
 		return nil, newError("failed to open file: ", filename).Base(err)
 	}
