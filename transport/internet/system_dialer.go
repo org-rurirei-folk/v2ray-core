@@ -59,7 +59,6 @@ func HasBindAddr(sockopt *SocketConfig) bool {
 }
 
 func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
-	src.Network = dest.Network
 	srcAddr, err := ResolveNetAddr(src)
 	if err != nil {
 		return nil, err
@@ -82,7 +81,6 @@ func HandleDialUDP(ctx context.Context, src, dest net.Destination, sockopt *Sock
 }
 
 func HandleDial(ctx context.Context, src, dest net.Destination, sockopt *SocketConfig, controllers []controller) (net.Conn, error) {
-	src.Network = dest.Network
 	srcAddr, err := ResolveNetAddr(src)
 	if err != nil {
 		return nil, err
