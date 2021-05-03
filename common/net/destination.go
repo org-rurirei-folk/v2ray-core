@@ -91,7 +91,7 @@ func UnixDestination(address Address) Destination {
 // AnyDestination is the value for non-null src with net.AnyIP
 func AnyDestination(network Network) Destination {
 	return Destination{
-		Address: AnyIP,
+		Address: IPAddress(AnyIP),
 		Port:    Port(0),
 		Network: network,
 	}
