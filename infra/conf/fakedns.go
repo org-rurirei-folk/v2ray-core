@@ -82,7 +82,7 @@ func (FakeDNSPostProcessingStage) Process(config *Config) error {
 			case isIPv4Enable && isIPv6Enable:
 				config.FakeDNS.pools = []*FakeDNSPoolElementConfig{
 					{
-						IPPool:  "198.18.0.0/15",
+						IPPool:  "240.0.0.0/8",
 						LRUSize: 32768,
 					},
 					{
@@ -97,7 +97,7 @@ func (FakeDNSPostProcessingStage) Process(config *Config) error {
 				}
 			case isIPv4Enable && !isIPv6Enable:
 				config.FakeDNS.pool = &FakeDNSPoolElementConfig{
-					IPPool:  "198.18.0.0/15",
+					IPPool:  "240.0.0.0/8",
 					LRUSize: 65535,
 				}
 			}
