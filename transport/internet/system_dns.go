@@ -5,8 +5,6 @@ import (
 	"net"
 )
 
-const SystemDNS = "8.8.8.8:53"
-
 type DNSResolverFunc func() *net.Resolver
 
 var NewDNSResolver DNSResolverFunc = func() *net.Resolver {
