@@ -80,8 +80,8 @@ type Sockopt struct {
 
 // SystemDialer is the dialer for connection from internet.DialSystem().
 type SystemDialer struct {
-	// dialer of the connection
-	dialer *net.Dialer
+	// Dialer of the connection
+	Dialer *net.Dialer
 }
 
 // SetAttribute attachs additional string attributes to content.
