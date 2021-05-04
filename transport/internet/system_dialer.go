@@ -103,7 +103,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 
 	if alternativeSystemDialer != nil {
 		ctx = session.ContextWithSystemDialer(ctx, &session.SystemDialer{
-			dialer: dialer,
+			Dialer: dialer,
 		})
 		return alternativeSystemDialer.Dial(ctx, src, dest, sockopt)
 	}
