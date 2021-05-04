@@ -86,13 +86,13 @@ func (FakeDNSPostProcessingStage) Process(config *Config) error {
 						LRUSize: 32768,
 					},
 					{
-						IPPool:  "fc00::/18",
+						IPPool:  "fc00::/7",
 						LRUSize: 32768,
 					},
 				}
 			case !isIPv4Enable && isIPv6Enable:
 				config.FakeDNS.pool = &FakeDNSPoolElementConfig{
-					IPPool:  "fc00::/18",
+					IPPool:  "fc00::/7",
 					LRUSize: 65535,
 				}
 			case isIPv4Enable && !isIPv6Enable:
