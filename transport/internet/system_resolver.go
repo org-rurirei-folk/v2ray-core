@@ -5,9 +5,9 @@ import (
 	"net"
 )
 
-type DNSResolverFunc func() *net.Resolver
+type SystemResolverFunc func() *net.Resolver
 
-var NewDNSResolver DNSResolverFunc = func() *net.Resolver {
+var NewSystemResolver SystemResolverFunc = func() *net.Resolver {
 	return &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
@@ -15,4 +15,10 @@ var NewDNSResolver DNSResolverFunc = func() *net.Resolver {
 			return dialer.DialContext(ctx, network, address)
 		},
 	}
+}
+
+type SystemDialerFunc func() *net.Dialer
+
+var NewSystemDialer SystemDialerFunc = func() *net.Dialer {
+	return nil
 }
