@@ -62,6 +62,16 @@ func mustToContext(ctx context.Context, v *Instance) context.Context {
 	return ctx
 }
 
+// ToContext returns ctx from the given context, or creates an Instance if the context doesn't find that.
+func ToContext(ctx context.Context, v *Instance) context.Context {
+	return toContext(ctx, v)
+}
+
+// MustToContext returns ctx from the given context, or panics if not found that.
+func MustToContext(ctx context.Context, v *Instance) context.Context {
+	return mustToContext(ctx, v)
+}
+
 /* ToBackgroundDetachedContext create a detached context from another context
    Internal API
 */
