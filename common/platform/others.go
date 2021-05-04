@@ -3,6 +3,8 @@
 package platform
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -31,8 +33,9 @@ func GetAssetLocation(file string) string {
 		filepath.Join("/usr/local/share/v2ray/", file),
 		filepath.Join("/usr/share/v2ray/", file),
 		filepath.Join("/opt/share/v2ray/", file),
+		file,
 	} {
-		if _, err := os.Stat(p); os.IsNotExist(err) {
+		if _, err := os.Stat(p); err != nil && errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 
