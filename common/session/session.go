@@ -8,7 +8,6 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/errors"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
 // ID of a session.
@@ -82,7 +81,7 @@ type Sockopt struct {
 // SystemDialer is the dialer for connection from internet.DialSystem().
 type SystemDialer struct {
 	// dialer of the connection
-	dialer internet.SystemDialer
+	dialer *net.Dialer
 }
 
 // SetAttribute attachs additional string attributes to content.
