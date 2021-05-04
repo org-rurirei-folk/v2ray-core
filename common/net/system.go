@@ -57,5 +57,6 @@ type UnixListener = net.UnixListener
 
 var ResolveUnixAddr = net.ResolveUnixAddr
 var ResolveUDPAddr = net.ResolveUDPAddr
+var ResolveTCPAddr = net.ResolveTCPAddr
 
 type Resolver = net.Resolver

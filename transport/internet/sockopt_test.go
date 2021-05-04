@@ -8,6 +8,7 @@ import (
 
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
+	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/testing/servers/tcp"
 	. "github.com/v2fly/v2ray-core/v4/transport/internet"
 )
@@ -24,7 +25,7 @@ func TestTCPFastOpen(t *testing.T) {
 
 	ctx := context.Background()
 	dialer := DefaultSystemDialer{}
-	conn, err := dialer.Dial(ctx, nil, dest, &SocketConfig{
+	conn, err := dialer.Dial(ctx, net.Destination{Network: net.Network_TCP}, dest, &SocketConfig{
 		Tfo: SocketConfig_Enable,
 	})
 	common.Must(err)

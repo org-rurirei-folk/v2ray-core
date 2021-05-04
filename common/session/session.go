@@ -37,7 +37,7 @@ func ExportIDToError(ctx context.Context) errors.ExportOption {
 type Inbound struct {
 	// Source address of the inbound connection.
 	Source net.Destination
-	// Getaway address
+	// Gateway address
 	Gateway net.Destination
 	// Tag of the inbound proxy that handles the connection.
 	Tag string
@@ -50,7 +50,7 @@ type Outbound struct {
 	// Target address of the outbound connection.
 	Target net.Destination
 	// Gateway address
-	Gateway net.Address
+	Gateway net.Destination
 }
 
 // SniffingRequest controls the behavior of content sniffing.
