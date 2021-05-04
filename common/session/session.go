@@ -78,6 +78,12 @@ type Sockopt struct {
 	Mark int32
 }
 
+// SystemDialer is the dialer for connection from internet.DialSystem().
+type SystemDialer struct {
+	// Dialer of the connection
+	Dialer *net.Dialer
+}
+
 // SetAttribute attachs additional string attributes to content.
 func (c *Content) SetAttribute(name string, value string) {
 	if c.Attributes == nil {
