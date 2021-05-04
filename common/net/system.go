@@ -59,3 +59,4 @@ var ResolveUnixAddr = net.ResolveUnixAddr
 var ResolveUDPAddr = net.ResolveUDPAddr
 
 type Resolver = net.Resolver
+type Dialer = net.Dialer
