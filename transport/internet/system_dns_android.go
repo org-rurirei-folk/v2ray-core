@@ -7,6 +7,8 @@ import (
 	"net"
 )
 
+const SystemDNS = "8.8.8.8:53"
+
 func init() {
 	NewDNSResolver = func() *net.Resolver {
 		return &net.Resolver{
