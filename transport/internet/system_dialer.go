@@ -11,6 +11,8 @@ import (
 
 var (
 	effectiveSystemDialer SystemDialer = &DefaultSystemDialer{}
+
+	alternativeSystemDialer SystemDialer = nil
 )
 
 type SystemDialer interface {
@@ -99,6 +101,13 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 		dialer = dialer2
 	}
 
+	if alternativeSystemDialer != nil {
+		ctx = session.ContextWithSystemDialer(ctx, &session.SystemDialer{
+			dialer: dialer,
+		})
+		return alternativeSystemDialer.Dial(ctx, src, dest, sockopt)
+	}
+
 	return dialer.DialContext(ctx, dest.Network.SystemString(), dest.NetAddr())
 }
 
@@ -166,7 +175,7 @@ func UseAlternativeSystemDialer(dialer SystemDialer) {
 	if dialer == nil {
 		dialer = &DefaultSystemDialer{}
 	}
-	effectiveSystemDialer = dialer
+	alternativeSystemDialer = dialer
 }
 
 // RegisterDialerController adds a controller to the effective system dialer.
