@@ -69,7 +69,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 	dialer := &net.Dialer{
 		Timeout:   time.Second * 16,
 		LocalAddr: resolveSrcAddr(dest.Network, src),
-		Resolver:  NewDNSResolver(),
+		Resolver:  NewSystemResolver(),
 	}
 
 	if sockopt != nil || len(d.controllers) > 0 {
@@ -93,6 +93,10 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 				}
 			})
 		}
+	}
+
+	if dialer2 := NewSystemDialer(); dialer2 != nil {
+		dialer = dialer2
 	}
 
 	return dialer.DialContext(ctx, dest.Network.SystemString(), dest.NetAddr())
