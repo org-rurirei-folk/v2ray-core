@@ -89,6 +89,19 @@ func SockoptFromContext(ctx context.Context) *Sockopt {
 	return nil
 }
 
+// ContextWithSystemDialer returns a new context with systemDialer included
+func ContextWithSystemDialer(ctx context.Context, d *SystemDialer) context.Context {
+	return context.WithValue(ctx, systemDialerSessionKey, d)
+}
+
+// SystemDialerFromContext returns systemDialer in this context, or nil if not contained.
+func SystemDialerFromContext(ctx context.Context) *SystemDialer {
+	if systemDialer, ok := ctx.Value(systemDialerSessionKey).(*SystemDialer); ok {
+		return systemDialer
+	}
+	return nil
+}
+
 func GetTransportLayerProxyTagFromContext(ctx context.Context) string {
 	if ContentFromContext(ctx) == nil {
 		return ""
