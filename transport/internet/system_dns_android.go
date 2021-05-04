@@ -12,9 +12,8 @@ func init() {
 		return &net.Resolver{
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
-				const systemDNS = "8.8.8.8:53"
 				var dialer net.Dialer
-				return dialer.DialContext(ctx, network, systemDNS)
+				return dialer.DialContext(ctx, network, SystemDNS)
 			},
 		}
 	}
