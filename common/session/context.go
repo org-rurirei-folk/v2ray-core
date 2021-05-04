@@ -13,6 +13,7 @@ const (
 	contentSessionKey
 	muxPreferedSessionKey
 	sockoptSessionKey
+	systemDialerSessionKey
 	trackedConnectionErrorKey
 )
 
