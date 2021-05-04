@@ -172,9 +172,6 @@ func (v *SimpleSystemDialer) Dial(ctx context.Context, src net.Address, dest net
 //
 // v2ray:api:stable
 func UseAlternativeSystemDialer(dialer SystemDialer) {
-	if dialer == nil {
-		dialer = &DefaultSystemDialer{}
-	}
 	alternativeSystemDialer = dialer
 }
 
