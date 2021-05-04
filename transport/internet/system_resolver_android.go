@@ -10,7 +10,7 @@ import (
 const SystemDNS = "8.8.8.8:53"
 
 func init() {
-	NewDNSResolver = func() *net.Resolver {
+	NewSystemResolver = func() *net.Resolver {
 		return &net.Resolver{
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
