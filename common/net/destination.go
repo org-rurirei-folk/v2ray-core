@@ -88,6 +88,15 @@ func UnixDestination(address Address) Destination {
 	}
 }
 
+// AnyDestination is the value for non-null src with net.AnyIP
+func AnyDestination(network Network) Destination {
+	return Destination{
+		Address: AnyIP,
+		Port:    Port(0),
+		Network: network,
+	}
+}
+
 // NetAddr returns the network address in this Destination in string form.
 func (d Destination) NetAddr() string {
 	addr := ""

@@ -11,6 +11,8 @@ import (
 
 var (
 	effectiveSystemDialer SystemDialer = &DefaultSystemDialer{}
+
+	alternativeSystemDialer SystemDialer = nil
 )
 
 type SystemDialer interface {
@@ -69,6 +71,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 	dialer := &net.Dialer{
 		Timeout:   time.Second * 16,
 		LocalAddr: resolveSrcAddr(dest.Network, src),
+		Resolver:  NewSystemResolver(),
 	}
 
 	if sockopt != nil || len(d.controllers) > 0 {
@@ -92,6 +95,17 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 				}
 			})
 		}
+	}
+
+	if dialer2 := NewSystemDialer(); dialer2 != nil {
+		dialer = dialer2
+	}
+
+	if alternativeSystemDialer != nil {
+		ctx = session.ContextWithSystemDialer(ctx, &session.SystemDialer{
+			Dialer: dialer,
+		})
+		return alternativeSystemDialer.Dial(ctx, src, dest, sockopt)
 	}
 
 	return dialer.DialContext(ctx, dest.Network.SystemString(), dest.NetAddr())
@@ -158,10 +172,7 @@ func (v *SimpleSystemDialer) Dial(ctx context.Context, src net.Address, dest net
 //
 // v2ray:api:stable
 func UseAlternativeSystemDialer(dialer SystemDialer) {
-	if dialer == nil {
-		dialer = &DefaultSystemDialer{}
-	}
-	effectiveSystemDialer = dialer
+	alternativeSystemDialer = dialer
 }
 
 // RegisterDialerController adds a controller to the effective system dialer.
