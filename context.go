@@ -45,6 +45,9 @@ func toContext(ctx context.Context, v *Instance) context.Context {
 	return ctx
 }
 
+// ToContext returns ctx from the given context, or creates an Instance if the context doesn't find that.
+var ToContext = toContext
+
 /*ToBackgroundDetachedContext create a detached context from another context
 Internal API
 */
