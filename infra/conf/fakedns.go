@@ -82,22 +82,22 @@ func (FakeDNSPostProcessingStage) Process(config *Config) error {
 			case isIPv4Enable && isIPv6Enable:
 				config.FakeDNS.pools = []*FakeDNSPoolElementConfig{
 					{
-						IPPool:  "198.18.0.0/15",
+						IPPool:  "240.0.0.0/8",
 						LRUSize: 32768,
 					},
 					{
-						IPPool:  "fc00::/18",
+						IPPool:  "fc00::/7",
 						LRUSize: 32768,
 					},
 				}
 			case !isIPv4Enable && isIPv6Enable:
 				config.FakeDNS.pool = &FakeDNSPoolElementConfig{
-					IPPool:  "fc00::/18",
+					IPPool:  "fc00::/7",
 					LRUSize: 65535,
 				}
 			case isIPv4Enable && !isIPv6Enable:
 				config.FakeDNS.pool = &FakeDNSPoolElementConfig{
-					IPPool:  "198.18.0.0/15",
+					IPPool:  "240.0.0.0/8",
 					LRUSize: 65535,
 				}
 			}
