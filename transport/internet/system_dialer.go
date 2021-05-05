@@ -171,8 +171,12 @@ func (v *SimpleSystemDialer) Dial(ctx context.Context, src net.Address, dest net
 // Caller must ensure there is no race condition.
 //
 // v2ray:api:stable
-func UseAlternativeSystemDialer(dialer SystemDialer) {
-	alternativeSystemDialer = dialer
+func UseAlternativeSystemDialer(dialer1, dialer2 SystemDialer) {
+	if dialer1 != nil {
+		effectiveSystemDialer = dialer1
+	}
+
+	alternativeSystemDialer = dialer2
 }
 
 // RegisterDialerController adds a controller to the effective system dialer.
