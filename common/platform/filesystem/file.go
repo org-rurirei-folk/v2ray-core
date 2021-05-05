@@ -8,10 +8,22 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 )
 
+type FileSeekerFunc func(path string) (io.ReadSeekCloser, error)
+
 type FileReaderFunc func(path string) (io.ReadCloser, error)
+
+type FileWriterFunc func(path string) (io.WriteCloser, error)
+
+var NewFileSeeker FileSeekerFunc = func(path string) (io.ReadSeekCloser, error) {
+	return os.Open(path)
+}
 
 var NewFileReader FileReaderFunc = func(path string) (io.ReadCloser, error) {
 	return os.Open(path)
+}
+
+var NewFileWriter FileWriterFunc = func(path string) (io.WriteCloser, error) {
+	return os.Create(path)
 }
 
 func ReadFile(path string) ([]byte, error) {
@@ -22,6 +34,16 @@ func ReadFile(path string) ([]byte, error) {
 	defer reader.Close()
 
 	return buf.ReadAllToBytes(reader)
+}
+
+func WriteFile(path string, payload []byte) error {
+	writer, err := NewFileWriter(path)
+	if err != nil {
+		return err
+	}
+	defer writer.Close()
+
+	return buf.WriteAllBytes(writer, payload)
 }
 
 func ReadAsset(file string) ([]byte, error) {
