@@ -53,10 +53,13 @@ func NewSniffer(ctx context.Context) *Sniffer {
 
 var errUnknownContent = newError("unknown content")
 
-func (s *Sniffer) Sniff(c context.Context, payload []byte) (SniffResult, error) {
+func (s *Sniffer) Sniff(c context.Context, payload []byte, metadataSniffer bool) (SniffResult, error) {
 	var pendingSniffer []protocolSnifferWithMetadata
 	for _, si := range s.sniffer {
 		s := si.protocolSniffer
+		if si.metadataSniffer != metadataSniffer {
+			continue
+		}
 		result, err := s(c, payload)
 		if err == common.ErrNoClue {
 			pendingSniffer = append(pendingSniffer, si)
