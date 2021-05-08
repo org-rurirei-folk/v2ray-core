@@ -19,6 +19,18 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
+type SniffHeader struct {
+	domain string
+}
+
+func (h *SniffHeader) Protocol() string {
+	return "dns"
+}
+
+func (h *SniffHeader) Domain() string {
+	return h.domain
+}
+
 func ParseIPQuery(b []byte) (r bool, domain string, id uint16, qType dnsmessage.Type) {
 	var parser dnsmessage.Parser
 	header, err := parser.Start(b)
