@@ -1,22 +1,9 @@
 package dns
 
 import (
-	"context"
-	"io"
-	"sync"
-
 	"golang.org/x/net/dns/dnsmessage"
 
-	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	dns_proto "github.com/v2fly/v2ray-core/v4/common/protocol/dns"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features/dns"
-	"github.com/v2fly/v2ray-core/v4/transport"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
 type SniffHeader struct {
@@ -53,4 +40,17 @@ func ParseIPQuery(b []byte) (r bool, domain string, id uint16, qType dnsmessage.
 	domain = q.Name.String()
 	r = true
 	return
+}
+
+func SniffDNS(b []byte) (*SniffHeader, error) {
+	h := &SniffHeader{}
+
+	isIPQuery, domain, _, _ := ParseIPQuery(b)
+
+	if isIPQuery {
+		h.domain = domain
+		return h, nil
+	}
+
+	return nil, common.ErrNoClue
 }
