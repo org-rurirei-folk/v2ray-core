@@ -4,6 +4,7 @@ package dispatcher
 
 import (
 	"context"
+	"strings"
 
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/protocol/bittorrent"
@@ -55,6 +56,7 @@ var errUnknownContent = newError("unknown content")
 
 func (s *Sniffer) Sniff(c context.Context, payload []byte, metadataSniffer bool) (SniffResult, error) {
 	var pendingSniffer []protocolSnifferWithMetadata
+	var resultDNSRequest SniffResult
 	for _, si := range s.sniffer {
 		s := si.protocolSniffer
 		if si.metadataSniffer != metadataSniffer {
@@ -67,6 +69,13 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte, metadataSniffer bool)
 		}
 
 		if err == nil && result != nil {
+			if si.metadataSniffer && strings.HasPrefix(result.Protocol(), "dns") {
+				resultDNSRequest = result
+				continue
+			}
+			if si.metadataSniffer && resultDNSRequest != nil {
+				return CompositeResult(result, resultDNSRequest), nil
+			}
 			return result, nil
 		}
 	}
