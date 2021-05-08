@@ -1,8 +1,6 @@
 package fakedns
 
 import (
-	"golang.org/x/net/dns/dnsmessage"
-
 	"github.com/v2fly/v2ray-core/v4/common"
 )
 
@@ -20,13 +18,6 @@ func (h *SniffHeader) Domain() string {
 
 func SniffFakeDNS(b []byte) (*SniffHeader, error) {
 	h := &SniffHeader{}
-
-	isIPQuery, domain, _, _ := ParseIPQuery(b)
-
-	if isIPQuery {
-		h.domain = domain
-		return h, nil
-	}
 
 	return nil, common.ErrNoClue
 }
