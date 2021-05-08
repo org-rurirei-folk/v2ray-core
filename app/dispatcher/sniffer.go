@@ -4,7 +4,6 @@ package dispatcher
 
 import (
 	"context"
-	"strings"
 
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/protocol/bittorrent"
@@ -69,7 +68,7 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte, metadataSniffer bool)
 		}
 
 		if err == nil && result != nil {
-			if si.metadataSniffer && strings.HasPrefix(result.Protocol(), "dns") {
+			if si.metadataSniffer && result.Protocol == "dns" {
 				resultDNSRequest = result
 				continue
 			}
