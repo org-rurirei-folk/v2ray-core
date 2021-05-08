@@ -11,7 +11,7 @@ type SniffHeader struct {
 }
 
 func (h *SniffHeader) Protocol() string {
-	return "dns"
+	return "dns://" + h.domain
 }
 
 func (h *SniffHeader) Domain() string {
