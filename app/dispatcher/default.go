@@ -256,7 +256,7 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 
 	sniffer := NewSniffer(ctx)
 
-	metaresult, metadataErr := func() (SniffResult, error) {
+	sniff := func(metadataSniffer bool) (SniffResult, error) {
 		totalAttempt := 0
 		for {
 			select {
@@ -270,7 +270,7 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 
 				cReader.Cache(payload)
 				if !payload.IsEmpty() {
-					result, err := sniffer.Sniff(ctx, payload.Bytes(), true)
+					result, err := sniffer.Sniff(ctx, payload.Bytes(), metadataSniffer)
 					if err != common.ErrNoClue {
 						return result, err
 					}
@@ -280,37 +280,16 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 				}
 			}
 		}
-	}()
+	}
+
+	mataresult, metadataErr := sniff(true)
 
 	if metadataOnly {
 		return metaresult, metadataErr
 	}
 
-	contentResult, contentErr := func() (SniffResult, error) {
-		totalAttempt := 0
-		for {
-			select {
-			case <-ctx.Done():
-				return nil, ctx.Err()
-			default:
-				totalAttempt++
-				if totalAttempt > 2 {
-					return nil, errSniffingTimeout
-				}
+	contentResult, contentErr := sniff(false)
 
-				cReader.Cache(payload)
-				if !payload.IsEmpty() {
-					result, err := sniffer.Sniff(ctx, payload.Bytes(), false)
-					if err != common.ErrNoClue {
-						return result, err
-					}
-				}
-				if payload.IsFull() {
-					return nil, errUnknownContent
-				}
-			}
-		}
-	}()
 	if contentErr != nil && metadataErr == nil {
 		return metaresult, nil
 	}
