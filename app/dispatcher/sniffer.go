@@ -15,6 +15,7 @@ import (
 type SniffResult interface {
 	Protocol() string
 	Domain() string
+	DNS() string
 }
 
 type protocolSniffer func(context.Context, []byte) (SniffResult, error)
