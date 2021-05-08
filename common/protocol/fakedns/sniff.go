@@ -17,7 +17,7 @@ func (h *SniffHeader) Domain() string {
 }
 
 func SniffFakeDNS(b []byte) (*SniffHeader, error) {
-	h := &SniffHeader{}
+	// h := &SniffHeader{}
 
 	return nil, common.ErrNoClue
 }
