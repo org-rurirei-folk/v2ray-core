@@ -80,6 +80,10 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte, metadataSniffer bool)
 		}
 	}
 
+	if resultDNSRequest != nil {
+		return resultDNSRequest, nil
+	}
+
 	if len(pendingSniffer) > 0 {
 		s.sniffer = pendingSniffer
 		return nil, common.ErrNoClue
