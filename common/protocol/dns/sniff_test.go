@@ -20,7 +20,7 @@ func TestDNSParseIPQuery(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 
-	isIPQuery, domain, id, qType := dns_proto.ParseIPQuery(m)
+	isIPQuery, domain, _, _ := dns_proto.ParseIPQuery(m)
 	if isIPQuery {
 		if domain != "google.com." {
 			t.Errorf("not specified domain: %s", domain)
