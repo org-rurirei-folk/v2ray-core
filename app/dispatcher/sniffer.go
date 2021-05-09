@@ -68,7 +68,7 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte, metadataSniffer bool)
 		}
 
 		if err == nil && result != nil {
-			if si.metadataSniffer && result.Domain() == "dns" {
+			if si.metadataSniffer && result.Protocol() == "dns" {
 				resultDNSRequest = result
 				continue
 			}
