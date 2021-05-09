@@ -109,12 +109,17 @@ func (c compositeResult) Domain() string {
 	return c.domainResult.Domain()
 }
 
-func (c compositeResult) ProtocolForDomainResult() string {
+func (c compositeResult) ProtocolOfDomainResult() string {
 	return c.domainResult.Protocol()
 }
 
-type SnifferResultComposite interface {
-	ProtocolForDomainResult() string
+func (c compositeResult) DomainOfProtocolResult() string {
+	return c.protocolResult.Domain()
+}
+
+type CompositeSnifferResult interface {
+	ProtocolOfDomainResult() string
+	DomainOfProtocolResult() string
 }
 
 type SnifferIsProtoSubsetOf interface {
