@@ -177,11 +177,7 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 	return inboundLink, outboundLink
 }
 
-func shouldOverride(result SniffResult, domainOverride []string) bool {
-	protocolString := result.Protocol()
-	if resComp, ok := result.(CompositeSnifferResult); ok {
-		protocolString = resComp.ProtocolOfDomainResult()
-	}
+func shouldOverride(protocolString string, domainOverride []string) bool {
 	for _, p := range domainOverride {
 		if strings.EqualFold(protocolString, p) {
 			return true
@@ -221,16 +217,18 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		result, err := sniffer(ctx, cReader, metadataOnly)
 		if err == nil {
 			protocolString := result.Protocol()
-			if resComp, ok := result.(CompositeSnifferResult); ok && strings.HasPrefix(protocolString, "dns") {
+			if resComp, ok := result.(CompositeSnifferResult); ok && strings.EqualFold(protocolString, "dns") {
 				protocolString = resComp.ProtocolOfDomainResult()
 			}
+
 			content.Protocol = protocolString
-		}
-		if err == nil && shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
-			domain := result.Domain()
-			newError("sniffed domain: ", domain).WriteToLog(session.ExportIDToError(ctx))
-			destination.Address = net.ParseAddress(domain)
-			ob.Target = destination
+
+			if shouldOverride(protocolString, sniffingRequest.OverrideDestinationForProtocol) {
+				domain := result.Domain()
+				newError("sniffed domain: ", domain).WriteToLog(session.ExportIDToError(ctx))
+				destination.Address = net.ParseAddress(domain)
+				ob.Target = destination
+			}
 		}
 		d.routedDispatch(ctx, outbound, destination)
 	}
