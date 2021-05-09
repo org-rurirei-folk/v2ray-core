@@ -179,11 +179,8 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 
 func shouldOverride(result SniffResult, domainOverride []string) bool {
 	protocolString := result.Protocol()
-	if resComp, ok := result.(SnifferResultComposite); ok {
-		protocolString = resComp.ProtocolForDomainResult()
-	}
 	for _, p := range domainOverride {
-		if strings.HasPrefix(protocolString, p) {
+		if strings.EqualFold(protocolString, p) {
 			return true
 		}
 		if resultSubset, ok := result.(SnifferIsProtoSubsetOf); ok {
