@@ -217,7 +217,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		result, err := sniffer(ctx, cReader, metadataOnly)
 		if err == nil {
 			protocolString := result.Protocol()
-			if resComp, ok := result.(CompositeSnifferResult); ok && strings.EqualFold(protocolString, "dns") {
+			if resComp, ok := result.(CompositeSnifferResult); ok {
 				protocolString = resComp.ProtocolOfDomainResult()
 			}
 
