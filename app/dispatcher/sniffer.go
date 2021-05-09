@@ -68,11 +68,12 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte, metadataSniffer bool)
 		}
 
 		if err == nil && result != nil {
-			if si.metadataSniffer && result.Protocol() == "dns" {
+			if si.metadataSniffer && result.Domain() == "dns" {
 				resultDNSRequest = result
 				continue
 			}
 			if si.metadataSniffer && resultDNSRequest != nil {
+				// udp: dns: name-fakedns, protocol-dns
 				return CompositeResult(result, resultDNSRequest), nil
 			}
 			return result, nil
