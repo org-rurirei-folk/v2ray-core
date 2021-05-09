@@ -290,6 +290,8 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 		}
 	}
 
+	// tcp: no dns request as no effects
+	// udp: do metadataSniffer (dns and fakedns) only
 	metaresult, metadataErr := sniff(true)
 
 	if metadataOnly {
