@@ -217,7 +217,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		go d.routedDispatch(ctx, outbound, destination)
 	case destination.Network != net.Network_TCP:
 		// Only metadata sniff will be used for non tcp connection
-		result, err := sniffer(ctx, nil, true)
+		/* result, err := sniffer(ctx, nil, true)
 		if err == nil {
 			content.Protocol = result.Protocol()
 			if shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
@@ -227,7 +227,24 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 				ob.Target = destination
 			}
 		}
-		go d.routedDispatch(ctx, outbound, destination)
+		go d.routedDispatch(ctx, outbound, destination) */
+		go func() {
+			cReader := &cachedReader{
+				reader: outbound.Reader.(*pipe.Reader),
+			}
+			outbound.Reader = cReader
+			result, err := sniffer(ctx, cReader, true)
+			if err == nil {
+				content.Protocol = result.Protocol()
+			}
+			if err == nil && shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
+				domain := result.Domain()
+				newError("sniffed domain: ", domain).WriteToLog(session.ExportIDToError(ctx))
+				destination.Address = net.ParseAddress(domain)
+				ob.Target = destination
+			}
+			d.routedDispatch(ctx, outbound, destination)
+		}()
 	default:
 		go func() {
 			cReader := &cachedReader{
