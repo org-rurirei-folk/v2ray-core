@@ -15,7 +15,6 @@ import (
 type SniffResult interface {
 	Protocol() string
 	Domain() string
-	DNS() string
 }
 
 type protocolSniffer func(context.Context, []byte) (SniffResult, error)
@@ -69,7 +68,7 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte, metadataSniffer bool)
 		}
 
 		if err == nil && result != nil {
-			if si.metadataSniffer && result.Domain() == "dns" {
+			if si.metadataSniffer && result.Protocol() == "dns" {
 				resultDNSRequest = result
 				continue
 			}
