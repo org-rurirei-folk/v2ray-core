@@ -212,6 +212,25 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		ctx = session.ContextWithContent(ctx, content)
 	}
 	sniffingRequest := content.SniffingRequest
+
+	sniff := func(metadataOnly bool) {
+		cReader := &cachedReader{
+			reader: outbound.Reader.(*pipe.Reader),
+		}
+		outbound.Reader = cReader
+		result, err := sniffer(ctx, cReader, metadataOnly)
+		if err == nil {
+			content.Protocol = result.Protocol()
+		}
+		if err == nil && shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
+			domain := result.Domain()
+			newError("sniffed domain: ", domain).WriteToLog(session.ExportIDToError(ctx))
+			destination.Address = net.ParseAddress(domain)
+			ob.Target = destination
+		}
+		d.routedDispatch(ctx, outbound, destination)
+	}
+
 	switch {
 	case !sniffingRequest.Enabled:
 		go d.routedDispatch(ctx, outbound, destination)
@@ -228,41 +247,9 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 			}
 		}
 		go d.routedDispatch(ctx, outbound, destination) */
-		go func() {
-			cReader := &cachedReader{
-				reader: outbound.Reader.(*pipe.Reader),
-			}
-			outbound.Reader = cReader
-			result, err := sniffer(ctx, cReader, true)
-			if err == nil {
-				content.Protocol = result.Protocol()
-			}
-			if err == nil && shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
-				domain := result.Domain()
-				newError("sniffed domain: ", domain).WriteToLog(session.ExportIDToError(ctx))
-				destination.Address = net.ParseAddress(domain)
-				ob.Target = destination
-			}
-			d.routedDispatch(ctx, outbound, destination)
-		}()
+		go sniff(true)
 	default:
-		go func() {
-			cReader := &cachedReader{
-				reader: outbound.Reader.(*pipe.Reader),
-			}
-			outbound.Reader = cReader
-			result, err := sniffer(ctx, cReader, sniffingRequest.MetadataOnly)
-			if err == nil {
-				content.Protocol = result.Protocol()
-			}
-			if err == nil && shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
-				domain := result.Domain()
-				newError("sniffed domain: ", domain).WriteToLog(session.ExportIDToError(ctx))
-				destination.Address = net.ParseAddress(domain)
-				ob.Target = destination
-			}
-			d.routedDispatch(ctx, outbound, destination)
-		}()
+		go sniff(sniffingRequest.MetadataOnly)
 	}
 	return inbound, nil
 }
