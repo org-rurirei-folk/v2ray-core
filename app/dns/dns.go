@@ -262,7 +262,7 @@ func (s *DNS) sortClients(domain string) []*Client {
 	clientNames := make([]string, 0, len(s.clients))
 	domainRules := []string{}
 
-	// Priority domain matching
+	// domain matching
 	for _, match := range s.domainMatcher.Match(domain) {
 		info := s.matcherInfos[match]
 		if clientUsed[info.clientIdx] {
@@ -276,14 +276,17 @@ func (s *DNS) sortClients(domain string) []*Client {
 		domainRules = append(domainRules, fmt.Sprintf("%s(DNS idx:%d)", domainRule, info.clientIdx))
 	}
 
-	// Default round-robin query
-	for idx, client := range s.clients {
-		if clientUsed[idx] {
-			continue
+	// where no domain matched
+	if len(clients) == 0 {
+		// Default round-robin query
+		for idx, client := range s.clients {
+			if clientUsed[idx] {
+				continue
+			}
+			clientUsed[idx] = true
+			clients = append(clients, client)
+			clientNames = append(clientNames, client.Name())
 		}
-		clientUsed[idx] = true
-		clients = append(clients, client)
-		clientNames = append(clientNames, client.Name())
 	}
 
 	if len(domainRules) > 0 {
