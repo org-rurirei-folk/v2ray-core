@@ -13,7 +13,6 @@ import "app/router/config.proto";
 message NameServer {
   v2ray.core.common.net.Endpoint address = 1;
   bytes client_ip = 5;
-  bool skipFallback = 6;
 
   message PriorityDomain {
     DomainMatchingType type = 1;
@@ -82,6 +81,4 @@ message Config {
   bool disableCache = 8;
 
   QueryStrategy query_strategy = 9;
-
-  bool disableFallback = 10;
 }
