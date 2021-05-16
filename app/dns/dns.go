@@ -278,9 +278,9 @@ func (s *DNS) sortClients(domain string) []*Client {
 
 	// where no domain matched
 	if len(clients) == 0 {
-		// Default round-robin query
+		// the client without domains
 		for idx, client := range s.clients {
-			if clientUsed[idx] {
+			if clientUsed[idx] || len(client.domains) > 0 {
 				continue
 			}
 			clientUsed[idx] = true
