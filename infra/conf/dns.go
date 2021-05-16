@@ -16,12 +16,11 @@ import (
 )
 
 type NameServerConfig struct {
-	Address      *cfgcommon.Address
-	ClientIP     *cfgcommon.Address
-	Port         uint16
-	SkipFallback bool
-	Domains      []string
-	ExpectIPs    cfgcommon.StringList
+	Address   *cfgcommon.Address
+	ClientIP  *cfgcommon.Address
+	Port      uint16
+	Domains   []string
+	ExpectIPs cfgcommon.StringList
 
 	cfgctx context.Context
 }
@@ -34,18 +33,16 @@ func (c *NameServerConfig) UnmarshalJSON(data []byte) error {
 	}
 
 	var advanced struct {
-		Address      *cfgcommon.Address   `json:"address"`
-		ClientIP     *cfgcommon.Address   `json:"clientIp"`
-		Port         uint16               `json:"port"`
-		SkipFallback bool                 `json:"skipFallback"`
-		Domains      []string             `json:"domains"`
-		ExpectIPs    cfgcommon.StringList `json:"expectIps"`
+		Address   *cfgcommon.Address   `json:"address"`
+		ClientIP  *cfgcommon.Address   `json:"clientIp"`
+		Port      uint16               `json:"port"`
+		Domains   []string             `json:"domains"`
+		ExpectIPs cfgcommon.StringList `json:"expectIps"`
 	}
 	if err := json.Unmarshal(data, &advanced); err == nil {
 		c.Address = advanced.Address
 		c.ClientIP = advanced.ClientIP
 		c.Port = advanced.Port
-		c.SkipFallback = advanced.SkipFallback
 		c.Domains = advanced.Domains
 		c.ExpectIPs = advanced.ExpectIPs
 		return nil
@@ -117,7 +114,6 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 			Port:    uint32(c.Port),
 		},
 		ClientIp:          myClientIP,
-		SkipFallback:      c.SkipFallback,
 		PrioritizedDomain: domains,
 		Geoip:             geoipList,
 		OriginalRules:     originalRules,
@@ -133,13 +129,12 @@ var typeMap = map[router.Domain_Type]dns.DomainMatchingType{
 
 // DNSConfig is a JSON serializable object for dns.Config.
 type DNSConfig struct {
-	Servers         []*NameServerConfig     `json:"servers"`
-	Hosts           map[string]*HostAddress `json:"hosts"`
-	ClientIP        *cfgcommon.Address      `json:"clientIp"`
-	Tag             string                  `json:"tag"`
-	QueryStrategy   string                  `json:"queryStrategy"`
-	DisableCache    bool                    `json:"disableCache"`
-	DisableFallback bool                    `json:"disableFallback"`
+	Servers       []*NameServerConfig     `json:"servers"`
+	Hosts         map[string]*HostAddress `json:"hosts"`
+	ClientIP      *cfgcommon.Address      `json:"clientIp"`
+	Tag           string                  `json:"tag"`
+	QueryStrategy string                  `json:"queryStrategy"`
+	DisableCache  bool                    `json:"disableCache"`
 }
 
 type HostAddress struct {
@@ -206,9 +201,8 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 	geoLoader := cfgEnv.GetGeoLoader()
 
 	config := &dns.Config{
-		Tag:             c.Tag,
-		DisableCache:    c.DisableCache,
-		DisableFallback: c.DisableFallback,
+		Tag:          c.Tag,
+		DisableCache: c.DisableCache,
 	}
 
 	if c.ClientIP != nil {
