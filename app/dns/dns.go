@@ -24,15 +24,14 @@ import (
 // DNS is a DNS rely server.
 type DNS struct {
 	sync.Mutex
-	tag             string
-	disableCache    bool
-	disableFallback bool
-	ipOption        *dns.IPOption
-	hosts           *StaticHosts
-	clients         []*Client
-	ctx             context.Context
-	domainMatcher   strmatcher.IndexMatcher
-	matcherInfos    []DomainMatcherInfo
+	tag           string
+	disableCache  bool
+	ipOption      *dns.IPOption
+	hosts         *StaticHosts
+	clients       []*Client
+	ctx           context.Context
+	domainMatcher strmatcher.IndexMatcher
+	matcherInfos  []DomainMatcherInfo
 }
 
 // DomainMatcherInfo contains information attached to index returned by Server.domainMatcher
@@ -142,7 +141,6 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 		domainMatcher:   domainMatcher,
 		matcherInfos:    matcherInfos,
 		disableCache:    config.DisableCache,
-		disableFallback: config.DisableFallback,
 	}, nil
 }
 
@@ -264,24 +262,25 @@ func (s *DNS) sortClients(domain string) []*Client {
 	clientNames := make([]string, 0, len(s.clients))
 	domainRules := []string{}
 
-	// Priority domain matching
+	// domain matching
 	for _, match := range s.domainMatcher.Match(domain) {
 		info := s.matcherInfos[match]
-		client := s.clients[info.clientIdx]
-		domainRule := client.domains[info.domainRuleIdx]
-		domainRules = append(domainRules, fmt.Sprintf("%s(DNS idx:%d)", domainRule, info.clientIdx))
 		if clientUsed[info.clientIdx] {
 			continue
 		}
 		clientUsed[info.clientIdx] = true
+		client := s.clients[info.clientIdx]
 		clients = append(clients, client)
 		clientNames = append(clientNames, client.Name())
+		domainRule := client.domains[info.domainRuleIdx]
+		domainRules = append(domainRules, fmt.Sprintf("%s(DNS idx:%d)", domainRule, info.clientIdx))
 	}
 
-	if !s.disableFallback {
-		// Default round-robin query
+	// where no domain matched
+	if len(clients) == 0 {
+		// the client without domains
 		for idx, client := range s.clients {
-			if clientUsed[idx] || client.skipFallback {
+			if clientUsed[idx] || len(client.domains) > 0 {
 				continue
 			}
 			clientUsed[idx] = true
@@ -295,12 +294,6 @@ func (s *DNS) sortClients(domain string) []*Client {
 	}
 	if len(clientNames) > 0 {
 		newError("domain ", domain, " will use DNS in order: ", clientNames).AtDebug().WriteToLog()
-	}
-
-	if len(clients) == 0 {
-		clients = append(clients, s.clients[0])
-		clientNames = append(clientNames, s.clients[0].Name())
-		newError("domain ", domain, " will use the first DNS: ", clientNames).AtDebug().WriteToLog()
 	}
 
 	return clients
