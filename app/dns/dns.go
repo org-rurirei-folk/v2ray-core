@@ -141,7 +141,6 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 		domainMatcher:   domainMatcher,
 		matcherInfos:    matcherInfos,
 		disableCache:    config.DisableCache,
-		disableFallback: config.DisableFallback,
 	}, nil
 }
 
