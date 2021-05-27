@@ -3,6 +3,8 @@
 package dns
 
 import (
+	"context"
+
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/strmatcher"
@@ -17,7 +19,7 @@ type StaticHosts struct {
 }
 
 // NewStaticHosts creates a new StaticHosts instance.
-func NewStaticHosts(hosts []*Config_HostMapping, legacy map[string]*net.IPOrDomain) (*StaticHosts, error) {
+func NewStaticHosts(hosts []*Config_HostMapping, legacy map[string]*net.IPOrDomain) (Server, error) {
 	g := new(strmatcher.MatcherGroup)
 	sh := &StaticHosts{
 		ips:      make([][]net.Address, len(hosts)+len(legacy)+16),
@@ -87,7 +89,7 @@ func (h *StaticHosts) lookupInternal(domain string) []net.Address {
 	return ips
 }
 
-func (h *StaticHosts) lookup(domain string, option dns.IPOption, maxDepth int) []net.Address {
+func (h *StaticHosts) lookup(ctx context.Context, domain string, option dns.IPOption, maxDepth int) []net.Address {
 	switch addrs := h.lookupInternal(domain); {
 	case len(addrs) == 0: // Not recorded in static hosts, return nil
 		return nil
@@ -106,6 +108,10 @@ func (h *StaticHosts) lookup(domain string, option dns.IPOption, maxDepth int) [
 }
 
 // Lookup returns IP addresses or proxied domain for the given domain, if exists in this StaticHosts.
-func (h *StaticHosts) Lookup(domain string, option dns.IPOption) []net.Address {
-	return h.lookup(domain, option, 5)
+func (h *StaticHosts) QueryIP(ctx context.Context, domain string, option dns.IPOption) ([]net.Address, error) {
+	return h.lookup(ctx, domain, option, 5), nil
+}
+
+func (StaticHosts) Name() string {
+	return "StaticHosts"
 }
