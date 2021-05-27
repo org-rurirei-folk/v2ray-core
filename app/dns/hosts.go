@@ -94,10 +94,10 @@ func (h *StaticHosts) lookup(ctx context.Context, domain string, option dns.IPOp
 	case len(addrs) == 0: // Not recorded in static hosts, return nil
 		return nil
 	case len(addrs) == 1 && addrs[0].Family().IsDomain(): // Try to unwrap domain
-		newError("found replaced domain: ", domain, " -> ", addrs[0].Domain(), ". Try to unwrap it").AtDebug().WriteToLog()
 		if maxDepth > 0 {
-			unwrapped := h.lookup(addrs[0].Domain(), option, maxDepth-1)
-			if unwrapped != nil {
+			newError("found replaced domain: ", domain, " -> ", addrs[0].Domain(), ". Try to unwrap it").AtDebug().WriteToLog()
+			if unwrapped := h.lookup(ctx, addrs[0].Domain(), option, maxDepth-1); unwrapped != nil {
+				
 				return unwrapped
 			}
 		}
