@@ -28,7 +28,7 @@ type DNS struct {
 	disableCache    bool
 	disableFallback bool
 	ipOption        *dns.IPOption
-	hosts           *StaticHosts
+	hosts           Server
 	clients         []*Client
 	ctx             context.Context
 	domainMatcher   strmatcher.IndexMatcher
@@ -205,7 +205,9 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 	}
 
 	// Static host lookup
-	switch addrs := s.hosts.Lookup(domain, option); {
+	switch addrs, err := s.hosts.QueryIP(ctx, domain, option); {
+	case err != nil: // Check error
+		break
 	case addrs == nil: // Domain not recorded in static host
 		break
 	case len(addrs) == 0: // Domain recorded, but no valid IP returned (e.g. IPv4 address with only IPv6 enabled)
