@@ -83,3 +83,5 @@ func (c *Client) LookupIPv6(host string) ([]net.IP, error) {
 func New() *Client {
 	return &Client{}
 }
+
+//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
