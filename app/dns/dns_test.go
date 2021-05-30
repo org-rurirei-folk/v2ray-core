@@ -735,7 +735,7 @@ func TestLocalDomain(t *testing.T) {
 		}
 	}
 	{ // Will match domain replacing
-		ips, err := clientH.LookupHosts("hostnamealias")
+		_, err := clientH.LookupHosts("hostnamealias")
 		if err.Error() != "empty response" {
 			t.Fatal("unexpected error: ", err)
 		}
