@@ -227,6 +227,11 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 		return toNetIP(addrs)
 	}
 
+	// where HostsLookup only
+	if !option.IPv4Enable && !option.IPv6Enable {
+		return nil, newError("hosts not found")
+	}
+
 	// Name servers lookup
 	errs := []error{}
 	ctx := session.ContextWithInbound(s.ctx, &session.Inbound{Tag: s.tag})
