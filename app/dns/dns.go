@@ -167,6 +167,15 @@ func (s *DNS) IsOwnLink(ctx context.Context) bool {
 	return inbound != nil && inbound.Tag == s.tag
 }
 
+// LookupHosts implements dns.Client.
+func (s *DNS) LookupHosts(domain string) ([]net.IP, error) {
+	return s.lookupIPInternal(domain, dns.IPOption{
+		IPv4Enable: false,
+		IPv6Enable: false,
+		FakeEnable: s.ipOption.FakeEnable,
+	})
+}
+
 // LookupIP implements dns.Client.
 func (s *DNS) LookupIP(domain string) ([]net.IP, error) {
 	return s.lookupIPInternal(domain, dns.IPOption{
