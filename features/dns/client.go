@@ -24,6 +24,13 @@ type Client interface {
 	LookupIP(domain string) ([]net.IP, error)
 }
 
+// HostsLookup is an optional feature for querying Hosts addresses only.
+//
+// v2ray:api:beta
+type HostsLookup interface {
+	LookupHosts(domain string) ([]net.IP, error)
+}
+
 // IPv4Lookup is an optional feature for querying IPv4 addresses only.
 //
 // v2ray:api:beta
