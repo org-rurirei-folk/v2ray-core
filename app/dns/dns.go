@@ -215,7 +215,7 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 
 	// Static host lookup
 	switch addrs := s.hosts.Lookup(domain, option); {
-	case addrs == nil: // Domain not recorded in static host
+	case addrs == nil && (option.IPv4Enable || option.IPv6Enable): // Domain not recorded in static host
 		break
 	case len(addrs) == 0: // Domain recorded, but no valid IP returned (e.g. IPv4 address with only IPv6 enabled)
 		return nil, dns.ErrEmptyResponse
@@ -225,11 +225,6 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 	default: // Successfully found ip records in static host
 		newError("returning ", len(addrs), " IP(s) for domain ", domain, " -> ", addrs).WriteToLog()
 		return toNetIP(addrs)
-	}
-
-	// where HostsLookup only
-	if !option.IPv4Enable && !option.IPv6Enable {
-		return nil, newError("hosts not found")
 	}
 
 	// Name servers lookup
