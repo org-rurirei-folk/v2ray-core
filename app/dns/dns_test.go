@@ -453,21 +453,9 @@ func TestStaticHostDomain(t *testing.T) {
 	common.Must(err)
 
 	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
-	clientHosts := client.(feature_dns.HostsLookup)
 
 	{
 		ips, err := client.LookupIP("example.com")
-		if err != nil {
-			t.Fatal("unexpected error: ", err)
-		}
-
-		if r := cmp.Diff(ips, []net.IP{{8, 8, 8, 8}}); r != "" {
-			t.Fatal(r)
-		}
-	}
-
-	{
-		ips, err := clientHosts.LookupHosts("example.com")
 		if err != nil {
 			t.Fatal("unexpected error: ", err)
 		}
