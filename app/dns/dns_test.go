@@ -703,7 +703,7 @@ func TestLocalDomain(t *testing.T) {
 		}
 	}
 
-	/* { // Will match static ip
+	{ // Will match static ip
 		ips, err := client.LookupIP("hostnamestatic")
 		if err != nil {
 			t.Fatal("unexpected error: ", err)
@@ -712,8 +712,8 @@ func TestLocalDomain(t *testing.T) {
 		if r := cmp.Diff(ips, []net.IP{{127, 0, 0, 53}}); r != "" {
 			t.Fatal(r)
 		}
-	} */
-	{ // Will match static ip
+	}
+	/* { // Will match static ip
 		ips, err := clientH.LookupHosts("hostnamestatic")
 		if err != nil {
 			t.Fatal("unexpected error: ", err)
@@ -722,10 +722,20 @@ func TestLocalDomain(t *testing.T) {
 		if r := cmp.Diff(ips, []net.IP{{127, 0, 0, 53}}); r != "" {
 			t.Fatal(r)
 		}
-	}
+	} */
 
 	{ // Will match domain replacing
 		ips, err := client.LookupIP("hostnamealias")
+		if err != nil {
+			t.Fatal("unexpected error: ", err)
+		}
+
+		if r := cmp.Diff(ips, []net.IP{{127, 0, 0, 1}}); r != "" {
+			t.Fatal(r)
+		}
+	}
+	{ // Will match domain replacing
+		ips, err := clientH.LookupHosts("hostnamealias")
 		if err != nil {
 			t.Fatal("unexpected error: ", err)
 		}
