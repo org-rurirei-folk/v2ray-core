@@ -37,6 +37,7 @@ func (err *Error) pkgPath() string {
 	if err.pathObj == nil {
 		return ""
 	}
+
 	path := reflect.TypeOf(err.pathObj).PkgPath()
 	// path = strings.TrimPrefix(path, "github.com/v2fly/v2ray-core/v4/")
 	// path = strings.TrimPrefix(path, "github.com/v2fly/v2ray-core/v4")
