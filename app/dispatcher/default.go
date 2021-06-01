@@ -212,6 +212,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		ctx = session.ContextWithContent(ctx, content)
 	}
 	sniffingRequest := content.SniffingRequest
+
 	switch {
 	case !sniffingRequest.Enabled:
 		go d.routedDispatch(ctx, outbound, destination)
@@ -256,13 +257,7 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 
 	sniffer := NewSniffer(ctx)
 
-	metaresult, metadataErr := sniffer.SniffMetadata(ctx)
-
-	if metadataOnly {
-		return metaresult, metadataErr
-	}
-
-	contentResult, contentErr := func() (SniffResult, error) {
+	sniff := func(metadataSniffer bool) (SniffResult, error) {
 		totalAttempt := 0
 		for {
 			select {
@@ -276,7 +271,7 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 
 				cReader.Cache(payload)
 				if !payload.IsEmpty() {
-					result, err := sniffer.Sniff(ctx, payload.Bytes())
+					result, err := sniffer.Sniff(ctx, payload.Bytes(), metadataSniffer)
 					if err != common.ErrNoClue {
 						return result, err
 					}
@@ -286,7 +281,17 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 				}
 			}
 		}
-	}()
+	}
+
+	// tcp: no dns request as no effects
+	// udp: do metadataSniffer (dns and fakedns) only
+
+	metaresult, metadataErr := sniff(true)
+	if metadataOnly {
+		return metaresult, metadataErr
+	}
+
+	contentResult, contentErr := sniff(false)
 	if contentErr != nil && metadataErr == nil {
 		return metaresult, nil
 	}

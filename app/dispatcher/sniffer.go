@@ -18,7 +18,8 @@ type SniffResult interface {
 
 type protocolSniffer func(context.Context, []byte) (SniffResult, error)
 
-type protocolSnifferWithMetadata struct {
+type snifferWithMetadata struct {
+	// domainSniffer domainSniffer
 	protocolSniffer protocolSniffer
 	// A Metadata sniffer will be invoked on connection establishment only, with nil body,
 	// for both TCP and UDP connections
@@ -27,12 +28,12 @@ type protocolSnifferWithMetadata struct {
 }
 
 type Sniffer struct {
-	sniffer []protocolSnifferWithMetadata
+	sniffer []snifferWithMetadata
 }
 
 func NewSniffer(ctx context.Context) *Sniffer {
 	ret := &Sniffer{
-		sniffer: []protocolSnifferWithMetadata{
+		sniffer: []snifferWithMetadata{
 			{func(c context.Context, b []byte) (SniffResult, error) { return http.SniffHTTP(b) }, false},
 			{func(c context.Context, b []byte) (SniffResult, error) { return tls.SniffTLS(b) }, false},
 			{func(c context.Context, b []byte) (SniffResult, error) { return bittorrent.SniffBittorrent(b) }, false},
@@ -43,7 +44,7 @@ func NewSniffer(ctx context.Context) *Sniffer {
 		ret.sniffer = append(ret.sniffer, sniffer)
 		fakeDNSThenOthers, err := newFakeDNSThenOthers(ctx, sniffer, others)
 		if err == nil {
-			ret.sniffer = append([]protocolSnifferWithMetadata{fakeDNSThenOthers}, ret.sniffer...)
+			ret.sniffer = append([]snifferWithMetadata{fakeDNSThenOthers}, ret.sniffer...)
 		}
 	}
 	return ret
@@ -51,41 +52,14 @@ func NewSniffer(ctx context.Context) *Sniffer {
 
 var errUnknownContent = newError("unknown content")
 
-func (s *Sniffer) Sniff(c context.Context, payload []byte) (SniffResult, error) {
-	var pendingSniffer []protocolSnifferWithMetadata
+func (s *Sniffer) Sniff(c context.Context, payload []byte, metadataSniffer bool) (SniffResult, error) {
+	var pendingSniffer []snifferWithMetadata
 	for _, si := range s.sniffer {
 		s := si.protocolSniffer
-		if si.metadataSniffer {
+		if si.metadataSniffer != metadataSniffer {
 			continue
 		}
 		result, err := s(c, payload)
-		if err == common.ErrNoClue {
-			pendingSniffer = append(pendingSniffer, si)
-			continue
-		}
-
-		if err == nil && result != nil {
-			return result, nil
-		}
-	}
-
-	if len(pendingSniffer) > 0 {
-		s.sniffer = pendingSniffer
-		return nil, common.ErrNoClue
-	}
-
-	return nil, errUnknownContent
-}
-
-func (s *Sniffer) SniffMetadata(c context.Context) (SniffResult, error) {
-	var pendingSniffer []protocolSnifferWithMetadata
-	for _, si := range s.sniffer {
-		s := si.protocolSniffer
-		if !si.metadataSniffer {
-			pendingSniffer = append(pendingSniffer, si)
-			continue
-		}
-		result, err := s(c, nil)
 		if err == common.ErrNoClue {
 			pendingSniffer = append(pendingSniffer, si)
 			continue
