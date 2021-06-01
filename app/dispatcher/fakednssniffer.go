@@ -14,19 +14,19 @@ import (
 )
 
 // newFakeDNSSniffer Create a Fake DNS metadata sniffer
-func newFakeDNSSniffer(ctx context.Context) (protocolSnifferWithMetadata, error) {
+func newFakeDNSSniffer(ctx context.Context) (snifferWithMetadata, error) {
 	var fakeDNSEngine dns.FakeDNSEngine
 	err := core.RequireFeatures(ctx, func(fdns dns.FakeDNSEngine) {
 		fakeDNSEngine = fdns
 	})
 	if err != nil {
-		return protocolSnifferWithMetadata{}, err
+		return snifferWithMetadata{}, err
 	}
 	if fakeDNSEngine == nil {
 		errNotInit := newError("FakeDNSEngine is not initialized, but such a sniffer is used").AtError()
-		return protocolSnifferWithMetadata{}, errNotInit
+		return snifferWithMetadata{}, errNotInit
 	}
-	return protocolSnifferWithMetadata{protocolSniffer: func(ctx context.Context, bytes []byte) (SniffResult, error) {
+	return snifferWithMetadata{protocolSniffer: func(ctx context.Context, bytes []byte) (SniffResult, error) {
 		Target := session.OutboundFromContext(ctx).Target
 		if Target.Network == net.Network_TCP || Target.Network == net.Network_UDP {
 			domainFromFakeDNS := fakeDNSEngine.GetDomainFromFakeDNS(Target.Address)
@@ -85,11 +85,8 @@ func (f DNSThenOthersSniffResult) Domain() string {
 	return f.domainName
 }
 
-func newFakeDNSThenOthers(ctx context.Context, fakeDNSSniffer protocolSnifferWithMetadata, others []protocolSnifferWithMetadata) (
-	protocolSnifferWithMetadata, error) { // nolint: unparam
-	// ctx may be used in the future
-	_ = ctx
-	return protocolSnifferWithMetadata{
+func newFakeDNSThenOthers(ctx context.Context, fakeDNSSniffer snifferWithMetadata, others []snifferWithMetadata) (snifferWithMetadata, error) {
+	return snifferWithMetadata{
 		protocolSniffer: func(ctx context.Context, bytes []byte) (SniffResult, error) {
 			ipAddressInRangeValue := &ipAddressInRangeOpt{}
 			ctx = context.WithValue(ctx, ipAddressInRange, ipAddressInRangeValue)
