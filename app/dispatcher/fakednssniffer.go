@@ -85,7 +85,7 @@ func (f DNSThenOthersSniffResult) Domain() string {
 	return f.domainName
 }
 
-func newFakeDNSThenOthers(ctx context.Context, fakeDNSSniffer snifferWithMetadata, others []snifferWithMetadata) (snifferWithMetadata, error) {
+func newFakeDNSThenOthers(ctx context.Context, fakeDNSSniffer snifferWithMetadata, others []snifferWithMetadata) (snifferWithMetadata, error) { // nolint: unparam
 	return snifferWithMetadata{
 		protocolSniffer: func(ctx context.Context, bytes []byte) (SniffResult, error) {
 			ipAddressInRangeValue := &ipAddressInRangeOpt{}
