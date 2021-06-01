@@ -19,6 +19,11 @@ func (*Client) Start() error { return nil }
 // Close implements common.Closable.
 func (*Client) Close() error { return nil }
 
+// LookupHosts implements Client.
+func (*Client) LookupHosts(host string) ([]net.IP, error) {
+	return nil, newError("not implemented")
+}
+
 // LookupIP implements Client.
 func (*Client) LookupIP(host string) ([]net.IP, error) {
 	ips, err := net.LookupIP(host)
@@ -78,3 +83,5 @@ func (c *Client) LookupIPv6(host string) ([]net.IP, error) {
 func New() *Client {
 	return &Client{}
 }
+
+//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen

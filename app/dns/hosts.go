@@ -107,5 +107,9 @@ func (h *StaticHosts) lookup(domain string, option dns.IPOption, maxDepth int) [
 
 // Lookup returns IP addresses or proxied domain for the given domain, if exists in this StaticHosts.
 func (h *StaticHosts) Lookup(domain string, option dns.IPOption) []net.Address {
+	if !option.IPv4Enable && !option.IPv6Enable {
+		option.IPv4Enable = true
+		option.IPv6Enable = true
+	}
 	return h.lookup(domain, option, 5)
 }

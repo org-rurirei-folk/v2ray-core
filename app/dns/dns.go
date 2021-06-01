@@ -165,6 +165,15 @@ func (s *DNS) IsOwnLink(ctx context.Context) bool {
 	return inbound != nil && inbound.Tag == s.tag
 }
 
+// LookupHosts implements dns.Client.
+func (s *DNS) LookupHosts(domain string) ([]net.IP, error) {
+	return s.lookupIPInternal(domain, dns.IPOption{
+		IPv4Enable: false,
+		IPv6Enable: false,
+		FakeEnable: s.ipOption.FakeEnable,
+	})
+}
+
 // LookupIP implements dns.Client.
 func (s *DNS) LookupIP(domain string) ([]net.IP, error) {
 	return s.lookupIPInternal(domain, dns.IPOption{
@@ -204,7 +213,7 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 
 	// Static host lookup
 	switch addrs := s.hosts.Lookup(domain, option); {
-	case addrs == nil: // Domain not recorded in static host
+	case addrs == nil && (option.IPv4Enable || option.IPv6Enable): // Domain not recorded in static host
 		break
 	case len(addrs) == 0: // Domain recorded, but no valid IP returned (e.g. IPv4 address with only IPv6 enabled)
 		return nil, dns.ErrEmptyResponse
