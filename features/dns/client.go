@@ -25,6 +25,7 @@ type Client interface {
 }
 
 // HostsLookup is an optional feature for querying Hosts addresses only.
+// IPv4 and IPv6 enabled (TODO: option).
 //
 // v2ray:api:beta
 type HostsLookup interface {
