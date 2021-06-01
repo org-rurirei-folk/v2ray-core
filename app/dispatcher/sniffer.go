@@ -18,7 +18,8 @@ type SniffResult interface {
 
 type protocolSniffer func(context.Context, []byte) (SniffResult, error)
 
-type protocolSnifferWithMetadata struct {
+type snifferWithMetadata struct {
+	// domainSniffer domainSniffer
 	protocolSniffer protocolSniffer
 	// A Metadata sniffer will be invoked on connection establishment only, with nil body,
 	// for both TCP and UDP connections
@@ -27,12 +28,12 @@ type protocolSnifferWithMetadata struct {
 }
 
 type Sniffer struct {
-	sniffer []protocolSnifferWithMetadata
+	sniffer []snifferWithMetadata
 }
 
 func NewSniffer(ctx context.Context) *Sniffer {
 	ret := &Sniffer{
-		sniffer: []protocolSnifferWithMetadata{
+		sniffer: []snifferWithMetadata{
 			{func(c context.Context, b []byte) (SniffResult, error) { return http.SniffHTTP(b) }, false},
 			{func(c context.Context, b []byte) (SniffResult, error) { return tls.SniffTLS(b) }, false},
 			{func(c context.Context, b []byte) (SniffResult, error) { return bittorrent.SniffBittorrent(b) }, false},
@@ -52,7 +53,7 @@ func NewSniffer(ctx context.Context) *Sniffer {
 var errUnknownContent = newError("unknown content")
 
 func (s *Sniffer) Sniff(c context.Context, payload []byte) (SniffResult, error) {
-	var pendingSniffer []protocolSnifferWithMetadata
+	var pendingSniffer []snifferWithMetadata
 	for _, si := range s.sniffer {
 		s := si.protocolSniffer
 		if si.metadataSniffer {
@@ -78,7 +79,7 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte) (SniffResult, error) 
 }
 
 func (s *Sniffer) SniffMetadata(c context.Context) (SniffResult, error) {
-	var pendingSniffer []protocolSnifferWithMetadata
+	var pendingSniffer []snifferWithMetadata
 	for _, si := range s.sniffer {
 		s := si.protocolSniffer
 		if !si.metadataSniffer {
