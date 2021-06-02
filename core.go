@@ -7,7 +7,7 @@
 // It may be configured to work with multiple protocols at the same time, and
 // uses the internal router to tunnel through different inbound and outbound
 // connections.
-package core 
+package core
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
