@@ -185,7 +185,7 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 					conn = tls.Client(conn, tlsConfig)
 				}
 
-				return h.getStatCouterConnection(conn), nil
+				return h.getStatCounterConnection(conn), nil
 			}
 
 			newError("failed to get outbound handler with tag: ", tag).AtWarning().WriteToLog(session.ExportIDToError(ctx))
@@ -208,10 +208,10 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 	}
 
 	conn, err := internet.Dial(ctx, dest, h.streamSettings)
-	return h.getStatCouterConnection(conn), err
+	return h.getStatCounterConnection(conn), err
 }
 
-func (h *Handler) getStatCouterConnection(conn internet.Connection) internet.Connection {
+func (h *Handler) getStatCounterConnection(conn internet.Connection) internet.Connection {
 	if h.uplinkCounter != nil || h.downlinkCounter != nil {
 		return &internet.StatCouterConnection{
 			Connection:   conn,
