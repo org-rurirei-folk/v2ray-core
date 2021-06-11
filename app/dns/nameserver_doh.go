@@ -219,35 +219,36 @@ func (s *DoHNameServer) sendQuery(ctx context.Context, domain string, clientIP n
 		deadline = time.Now().Add(time.Second * 5)
 	}
 
+	dnsCtx, dnsCancel := func(ctx context.Context) (context.Context, context.CancelFunc) {
+		// generate new context for each req, using same context
+		// may cause reqs all aborted if any one encounter an error
+		dnsCtx := ctx
+
+		// reserve internal dns server requested Inbound
+		if inbound := session.InboundFromContext(ctx); inbound != nil {
+			dnsCtx = session.ContextWithInbound(dnsCtx, inbound)
+		}
+
+		dnsCtx = session.ContextWithContent(dnsCtx, &session.Content{
+			Protocol:       "https",
+			SkipDNSResolve: true,
+		})
+
+		// forced to use mux for DOH
+		dnsCtx = session.ContextWithMuxPrefered(dnsCtx, true)
+
+		return context.WithDeadline(dnsCtx, deadline)
+	}(ctx)
+	defer dnsCancel()
+
 	for _, req := range reqs {
 		go func(r *dnsRequest) {
-			dnsCtxFunc := func() (context.Context, context.CancelFunc) {
-				// generate new context for each req, using same context
-				// may cause reqs all aborted if any one encounter an error
-				dnsCtx := ctx
-
-				// reserve internal dns server requested Inbound
-				if inbound := session.InboundFromContext(ctx); inbound != nil {
-					dnsCtx = session.ContextWithInbound(dnsCtx, inbound)
-				}
-
-				dnsCtx = session.ContextWithContent(dnsCtx, &session.Content{
-					Protocol:       "https",
-					SkipDNSResolve: true,
-				})
-
-				// forced to use mux for DOH
-				dnsCtx = session.ContextWithMuxPrefered(dnsCtx, true)
-
-				return context.WithDeadline(dnsCtx, deadline)
-			}
-
 			b, err := dns.PackMessage(r.msg)
 			if err != nil {
 				newError("failed to pack dns query").Base(err).AtError().WriteToLog()
 				return
 			}
-			resp, err := s.dohHTTPSContext(dnsCtxFunc, b.Bytes())
+			resp, err := s.dohHTTPSContext(dnsCtx, b.Bytes())
 			if err != nil {
 				newError("failed to retrieve response").Base(err).AtError().WriteToLog()
 				return
@@ -262,10 +263,7 @@ func (s *DoHNameServer) sendQuery(ctx context.Context, domain string, clientIP n
 	}
 }
 
-func (s *DoHNameServer) dohHTTPSContext(ctxFunc func() (context.Context, context.CancelFunc), b []byte) ([]byte, error) {
-	ctx, cancel := ctxFunc()
-	defer cancel()
-
+func (s *DoHNameServer) dohHTTPSContext(ctx context.Context, b []byte) ([]byte, error) {
 	body := bytes.NewBuffer(b)
 	req, err := http.NewRequest("POST", s.dohURL, body)
 	if err != nil {
