@@ -9,11 +9,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/session"
 )
 
-var (
-	effectiveSystemDialer SystemDialer = &DefaultSystemDialer{}
-
-	alternativeSystemDialer SystemDialer = nil
-)
+var effectiveSystemDialer SystemDialer = &DefaultSystemDialer{}
 
 type SystemDialer interface {
 	Dial(ctx context.Context, source net.Address, destination net.Destination, sockopt *SocketConfig) (net.Conn, error)
@@ -71,7 +67,6 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 	dialer := &net.Dialer{
 		Timeout:   time.Second * 16,
 		LocalAddr: resolveSrcAddr(dest.Network, src),
-		Resolver:  NewSystemResolver(),
 	}
 
 	if sockopt != nil || len(d.controllers) > 0 {
@@ -95,17 +90,6 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 				}
 			})
 		}
-	}
-
-	if dialer2 := NewSystemDialer(); dialer2 != nil {
-		dialer = dialer2
-	}
-
-	if alternativeSystemDialer != nil {
-		ctx = session.ContextWithSystemDialer(ctx, &session.SystemDialer{
-			Dialer: dialer,
-		})
-		return alternativeSystemDialer.Dial(ctx, src, dest, sockopt)
 	}
 
 	return dialer.DialContext(ctx, dest.Network.SystemString(), dest.NetAddr())
@@ -171,12 +155,11 @@ func (v *SimpleSystemDialer) Dial(ctx context.Context, src net.Address, dest net
 // Caller must ensure there is no race condition.
 //
 // v2ray:api:stable
-func UseAlternativeSystemDialer(dialer1, dialer2 SystemDialer) {
-	if dialer1 != nil {
-		effectiveSystemDialer = dialer1
+func UseAlternativeSystemDialer(dialer SystemDialer) {
+	if dialer == nil {
+		dialer = &DefaultSystemDialer{}
 	}
-
-	alternativeSystemDialer = dialer2
+	effectiveSystemDialer = dialer
 }
 
 // RegisterDialerController adds a controller to the effective system dialer.
