@@ -11,6 +11,11 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/signal/semaphore"
 )
 
+// Printer is the interface for logger.Print()
+type Printer interface {
+	Print(v ...interface{})
+}
+
 // Writer is the interface for writing logs.
 type Writer interface {
 	Write(string) error
@@ -84,11 +89,11 @@ func (l *generalLogger) Close() error {
 }
 
 type consoleLogWriter struct {
-	logger *log.Logger
+	Printer
 }
 
 func (w *consoleLogWriter) Write(s string) error {
-	w.logger.Print(s)
+	w.Print(s)
 	return nil
 }
 
@@ -97,12 +102,12 @@ func (w *consoleLogWriter) Close() error {
 }
 
 type fileLogWriter struct {
-	file   *os.File
-	logger *log.Logger
+	file *os.File
+	Printer
 }
 
 func (w *fileLogWriter) Write(s string) error {
-	w.logger.Print(s)
+	w.Print(s)
 	return nil
 }
 
@@ -114,7 +119,7 @@ func (w *fileLogWriter) Close() error {
 func CreateStdoutLogWriter() WriterCreator {
 	return func() Writer {
 		return &consoleLogWriter{
-			logger: log.New(os.Stdout, "", log.Ldate|log.Ltime),
+			Printer: log.New(os.Stdout, "", log.Ldate|log.Ltime),
 		}
 	}
 }
@@ -123,7 +128,7 @@ func CreateStdoutLogWriter() WriterCreator {
 func CreateStderrLogWriter() WriterCreator {
 	return func() Writer {
 		return &consoleLogWriter{
-			logger: log.New(os.Stderr, "", log.Ldate|log.Ltime),
+			Printer: log.New(os.Stderr, "", log.Ldate|log.Ltime),
 		}
 	}
 }
@@ -142,7 +147,7 @@ func CreateFileLogWriter(path string) (WriterCreator, error) {
 		}
 		return &fileLogWriter{
 			file:   file,
-			logger: log.New(file, "", log.Ldate|log.Ltime),
+			Printer: log.New(file, "", log.Ldate|log.Ltime),
 		}
 	}, nil
 }
