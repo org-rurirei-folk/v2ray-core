@@ -123,7 +123,7 @@ func (w *fileLogWriter) Close() error {
 // CreateStdoutLogWriter returns a LogWriterCreator that creates LogWriter for stdout.
 func CreateStdoutLogWriter() WriterCreator {
 	return func() Writer {
-		printer := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+		printer := Printer(log.New(os.Stdout, "", log.Ldate|log.Ltime))
 		if prt := UseAlternativeLogPrinter(); prt != nil {
 			printer = prt
 		}
@@ -136,7 +136,7 @@ func CreateStdoutLogWriter() WriterCreator {
 // CreateStderrLogWriter returns a LogWriterCreator that creates LogWriter for stderr.
 func CreateStderrLogWriter() WriterCreator {
 	return func() Writer {
-		printer := log.New(os.Stderr, "", log.Ldate|log.Ltime)
+		printer := Printer(log.New(os.Stderr, "", log.Ldate|log.Ltime))
 		if prt := UseAlternativeLogPrinter(); prt != nil {
 			printer = prt
 		}
@@ -153,7 +153,7 @@ func CreateFileLogWriter(path string) (WriterCreator, error) {
 		if err != nil {
 			return nil
 		}
-		printer := log.New(file, "", log.Ldate|log.Ltime)
+		printer := Printer(log.New(file, "", log.Ldate|log.Ltime))
 		if prt := UseAlternativeLogPrinter(); prt != nil {
 			printer = prt
 		}
