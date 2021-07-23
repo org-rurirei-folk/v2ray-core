@@ -42,7 +42,7 @@ func createHandler(logType LogType, options HandlerCreatorOptions) (log.Handler,
 	return creator(logType, options)
 }
 
-func init() {
+func RegisterDefaultHandlerCreators() {
 	common.Must(RegisterHandlerCreator(LogType_Console, func(lt LogType, options HandlerCreatorOptions) (log.Handler, error) {
 		return log.NewLogger(log.CreateStdoutLogWriter()), nil
 	}))
@@ -58,4 +58,8 @@ func init() {
 	common.Must(RegisterHandlerCreator(LogType_None, func(lt LogType, options HandlerCreatorOptions) (log.Handler, error) {
 		return nil, nil
 	}))
+}
+
+func init() {
+	RegisterDefaultHandlerCreators()
 }
