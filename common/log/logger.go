@@ -147,7 +147,7 @@ func CreateStderrLogWriter() WriterCreator {
 }
 
 // CreateFileLogWriter returns a LogWriterCreator that creates LogWriter for the given file.
-func CreateFileLogWriter(path string) (WriterCreator, error) {
+func CreateFileLogWriter(path string) WriterCreator {
 	return func() Writer {
 		file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 		if err != nil {
@@ -161,7 +161,7 @@ func CreateFileLogWriter(path string) (WriterCreator, error) {
 			file:    file,
 			Printer: printer,
 		}
-	}, nil
+	}
 }
 
 func init() {
