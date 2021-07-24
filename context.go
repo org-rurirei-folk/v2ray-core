@@ -52,6 +52,14 @@ var ToContext = toContext
 Internal API
 */
 func ToBackgroundDetachedContext(ctx context.Context) context.Context {
-	instance := MustFromContext(ctx)
-	return toContext(context.Background(), instance)
+	return &temporaryValueDelegationFix{context.Background(), ctx}
+}
+
+type temporaryValueDelegationFix struct {
+	context.Context
+	value context.Context
+}
+
+func (t *temporaryValueDelegationFix) Value(key interface{}) interface{} {
+	return t.value.Value(key)
 }
