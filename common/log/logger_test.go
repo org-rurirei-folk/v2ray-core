@@ -18,8 +18,7 @@ func TestFileLogger(t *testing.T) {
 	path := f.Name()
 	common.Must(f.Close())
 
-	creator, err := CreateFileLogWriter(path)
-	common.Must(err)
+	creator := CreateFileLogWriter(path)
 
 	handler := NewLogger(creator)
 	handler.Handle(&GeneralMessage{Content: "Test Log"})
