@@ -11,6 +11,16 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/signal/semaphore"
 )
 
+// Printer is the interface for logger.Print()
+type Printer interface {
+	Print(v ...interface{})
+}
+
+// UseAlternativeLogPrinter provides a alternative Printer
+var UseAlternativeLogPrinter = func() Printer {
+	return nil
+}
+
 // Writer is the interface for writing logs.
 type Writer interface {
 	Write(string) error
@@ -84,11 +94,11 @@ func (l *generalLogger) Close() error {
 }
 
 type consoleLogWriter struct {
-	logger *log.Logger
+	Printer
 }
 
 func (w *consoleLogWriter) Write(s string) error {
-	w.logger.Print(s)
+	w.Print(s)
 	return nil
 }
 
@@ -97,12 +107,12 @@ func (w *consoleLogWriter) Close() error {
 }
 
 type fileLogWriter struct {
-	file   *os.File
-	logger *log.Logger
+	file *os.File
+	Printer
 }
 
 func (w *fileLogWriter) Write(s string) error {
-	w.logger.Print(s)
+	w.Print(s)
 	return nil
 }
 
@@ -113,8 +123,12 @@ func (w *fileLogWriter) Close() error {
 // CreateStdoutLogWriter returns a LogWriterCreator that creates LogWriter for stdout.
 func CreateStdoutLogWriter() WriterCreator {
 	return func() Writer {
+		printer := Printer(log.New(os.Stdout, "", log.Ldate|log.Ltime))
+		if prt := UseAlternativeLogPrinter(); prt != nil {
+			printer = prt
+		}
 		return &consoleLogWriter{
-			logger: log.New(os.Stdout, "", log.Ldate|log.Ltime),
+			Printer: printer,
 		}
 	}
 }
@@ -122,29 +136,32 @@ func CreateStdoutLogWriter() WriterCreator {
 // CreateStderrLogWriter returns a LogWriterCreator that creates LogWriter for stderr.
 func CreateStderrLogWriter() WriterCreator {
 	return func() Writer {
+		printer := Printer(log.New(os.Stderr, "", log.Ldate|log.Ltime))
+		if prt := UseAlternativeLogPrinter(); prt != nil {
+			printer = prt
+		}
 		return &consoleLogWriter{
-			logger: log.New(os.Stderr, "", log.Ldate|log.Ltime),
+			Printer: printer,
 		}
 	}
 }
 
 // CreateFileLogWriter returns a LogWriterCreator that creates LogWriter for the given file.
-func CreateFileLogWriter(path string) (WriterCreator, error) {
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
-	if err != nil {
-		return nil, err
-	}
-	file.Close()
+func CreateFileLogWriter(path string) WriterCreator {
 	return func() Writer {
 		file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 		if err != nil {
 			return nil
 		}
-		return &fileLogWriter{
-			file:   file,
-			logger: log.New(file, "", log.Ldate|log.Ltime),
+		printer := Printer(log.New(file, "", log.Ldate|log.Ltime))
+		if prt := UseAlternativeLogPrinter(); prt != nil {
+			printer = prt
 		}
-	}, nil
+		return &fileLogWriter{
+			file:    file,
+			Printer: printer,
+		}
+	}
 }
 
 func init() {
