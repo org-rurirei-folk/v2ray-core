@@ -199,7 +199,8 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		panic("Dispatcher: Invalid destination.")
 	}
 	ob := &session.Outbound{
-		Target: destination,
+		Target:     destination,
+		TargetAddr: destination.Address,
 	}
 	ctx = session.ContextWithOutbound(ctx, ob)
 
