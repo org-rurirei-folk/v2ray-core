@@ -49,6 +49,8 @@ type Inbound struct {
 type Outbound struct {
 	// Target address of the outbound connection.
 	Target net.Destination
+	// TargetIP ip of the address outbound connection.
+	TargetIP net.Address
 	// Gateway address
 	Gateway net.Address
 }
