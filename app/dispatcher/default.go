@@ -200,7 +200,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 	}
 	ob := &session.Outbound{
 		Target:     destination,
-		TargetAddr: destination.Address,
+		TargetAddr: destination,
 	}
 	ctx = session.ContextWithOutbound(ctx, ob)
 
