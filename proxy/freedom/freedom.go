@@ -102,7 +102,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	if outbound == nil || !outbound.Target.IsValid() {
 		return newError("target not specified.")
 	}
-	destination := outbound.Target
+	destination := outbound.TargetAddr
 	if h.config.DestinationOverride != nil {
 		server := h.config.DestinationOverride.Server
 		if isValidAddress(server.Address) {
@@ -112,7 +112,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 			destination.Port = net.Port(server.Port)
 		}
 	}
-	newError("opening connection to ", destination).WriteToLog(session.ExportIDToError(ctx))
+	newError("opening connection to ", destination, " (", outbound.Target, ")").WriteToLog(session.ExportIDToError(ctx))
 
 	input := link.Reader
 	output := link.Writer

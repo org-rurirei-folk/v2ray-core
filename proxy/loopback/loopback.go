@@ -27,9 +27,9 @@ func (l *Loopback) Process(ctx context.Context, link *transport.Link, _ internet
 	if outbound == nil || !outbound.Target.IsValid() {
 		return newError("target not specified.")
 	}
-	destination := outbound.Target
+	destination := outbound.TargetAddr
 
-	newError("opening connection to ", destination).WriteToLog(session.ExportIDToError(ctx))
+	newError("opening connection to ", destination, " (", outbound.Target, ")").WriteToLog(session.ExportIDToError(ctx))
 
 	input := link.Reader
 	output := link.Writer

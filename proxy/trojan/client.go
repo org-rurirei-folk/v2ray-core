@@ -54,7 +54,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	if outbound == nil || !outbound.Target.IsValid() {
 		return newError("target not specified")
 	}
-	destination := outbound.Target
+	destination := outbound.TargetAddr
 	network := destination.Network
 
 	var server *protocol.ServerSpec
@@ -73,7 +73,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	if err != nil {
 		return newError("failed to find an available destination").AtWarning().Base(err)
 	}
-	newError("tunneling request to ", destination, " via ", server.Destination()).WriteToLog(session.ExportIDToError(ctx))
+	newError("tunneling request to ", destination, " (", outbound.Target, ")", " via ", server.Destination()).WriteToLog(session.ExportIDToError(ctx))
 
 	defer conn.Close()
 

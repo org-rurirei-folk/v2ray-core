@@ -49,6 +49,8 @@ type Inbound struct {
 type Outbound struct {
 	// Target address of the outbound connection.
 	Target net.Destination
+	// TargetAddr un-overrided address of the outbound connection.
+	TargetAddr net.Destination
 	// Gateway address
 	Gateway net.Address
 }
