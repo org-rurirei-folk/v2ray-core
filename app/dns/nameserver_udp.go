@@ -76,6 +76,13 @@ func (s *ClassicNameServer) Cleanup() error {
 	}
 
 	for domain, record := range s.ips {
+		if record.A != nil && len(record.A.IP) == 0 {
+			record.A = nil
+		}
+		if record.AAAA != nil && len(record.AAAA.IP) == 0 {
+			record.AAAA = nil
+		}
+
 		if record.A != nil && record.A.Expire.Before(now) {
 			record.A = nil
 		}
@@ -88,10 +95,6 @@ func (s *ClassicNameServer) Cleanup() error {
 		} else {
 			s.ips[domain] = record
 		}
-	}
-
-	if len(s.ips) == 0 {
-		s.ips = make(map[string]record)
 	}
 
 	for id, req := range s.requests {
@@ -146,8 +149,10 @@ func (s *ClassicNameServer) HandleResponse(ctx context.Context, packet *udp_prot
 func (s *ClassicNameServer) updateIP(domain string, newRec record) {
 	s.Lock()
 
-	newError(s.name, " updating IP records for domain:", domain).AtDebug().WriteToLog()
-	rec := s.ips[domain]
+	rec, found := s.ips[domain]
+	if !found {
+		rec = record{}
+	}
 
 	updated := false
 	if isNewer(rec.A, newRec.A) {
@@ -159,7 +164,8 @@ func (s *ClassicNameServer) updateIP(domain string, newRec record) {
 		updated = true
 	}
 
-	if updated {
+	if updated && ((newRec.A != nil && len(newRec.A.IP) > 0) || (newRec.AAAA != nil && len(newRec.AAAA.IP) > 0)) {
+		newError(s.name, " updating IP records for domain:", domain).AtDebug().WriteToLog()
 		s.ips[domain] = rec
 	}
 	if newRec.A != nil {
