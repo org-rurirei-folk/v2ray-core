@@ -86,7 +86,7 @@ func baseTCPNameServer(url *url.URL, prefix string) (*TCPNameServer, error) {
 
 	s := &TCPNameServer{
 		destination: dest,
-		ips:         make(map[string]record),
+		ips:         make(map[string]record, 0),
 		pub:         pubsub.NewService(),
 		name:        prefix + "//" + dest.NetAddr(),
 	}
@@ -108,10 +108,6 @@ func (s *TCPNameServer) Cleanup() error {
 	now := time.Now()
 	s.Lock()
 	defer s.Unlock()
-
-	if len(s.ips) == 0 {
-		return newError("nothing to do. stopping...")
-	}
 
 	for domain, record := range s.ips {
 		if record.A != nil && len(record.A.IP) == 0 {

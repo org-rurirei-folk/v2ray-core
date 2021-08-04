@@ -46,8 +46,8 @@ func NewClassicNameServer(address net.Destination, dispatcher routing.Dispatcher
 
 	s := &ClassicNameServer{
 		address:  address,
-		ips:      make(map[string]record),
-		requests: make(map[uint16]dnsRequest),
+		ips:      make(map[string]record, 0),
+		requests: make(map[uint16]dnsRequest, 0),
 		pub:      pubsub.NewService(),
 		name:     strings.ToUpper(address.String()),
 	}
@@ -70,10 +70,6 @@ func (s *ClassicNameServer) Cleanup() error {
 	now := time.Now()
 	s.Lock()
 	defer s.Unlock()
-
-	if len(s.ips) == 0 && len(s.requests) == 0 {
-		return newError(s.name, " nothing to do. stopping...")
-	}
 
 	for domain, record := range s.ips {
 		if record.A != nil && len(record.A.IP) == 0 {
@@ -101,10 +97,6 @@ func (s *ClassicNameServer) Cleanup() error {
 		if req.expire.Before(now) {
 			delete(s.requests, id)
 		}
-	}
-
-	if len(s.requests) == 0 {
-		s.requests = make(map[uint16]dnsRequest)
 	}
 
 	return nil
