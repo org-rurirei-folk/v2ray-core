@@ -57,7 +57,7 @@ func NewQUICNameServer(url *url.URL) (*QUICNameServer, error) {
 	dest := net.UDPDestination(net.DomainAddress(url.Hostname()), port)
 
 	s := &QUICNameServer{
-		ips:         make(map[string]record),
+		ips:         make(map[string]record, 0),
 		pub:         pubsub.NewService(),
 		name:        url.String(),
 		destination: dest,
@@ -80,10 +80,6 @@ func (s *QUICNameServer) Cleanup() error {
 	now := time.Now()
 	s.Lock()
 	defer s.Unlock()
-
-	if len(s.ips) == 0 {
-		return newError("nothing to do. stopping...")
-	}
 
 	for domain, record := range s.ips {
 		if record.A != nil && len(record.A.IP) == 0 {
