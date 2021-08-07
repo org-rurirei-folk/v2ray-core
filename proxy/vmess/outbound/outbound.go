@@ -139,60 +139,70 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	session := encoding.NewClientSession(ctx, isAEAD, protocol.DefaultIDHash, int64(behaviorSeed))
 	sessionPolicy := h.policyManager.ForLevel(request.User.Level)
 
-	ctx, cancel := context.WithCancel(ctx)
-	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
+	fn := func(addr net.Address) error {
+		request.Address = addr
 
-	requestDone := func() error {
-		defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
+		ctx, cancel := context.WithCancel(ctx)
+		timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
 
-		writer := buf.NewBufferedWriter(buf.NewWriter(conn))
-		if err := session.EncodeRequestHeader(request, writer); err != nil {
-			return newError("failed to encode request").Base(err).AtWarning()
-		}
+		requestDone := func() error {
+			defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
 
-		bodyWriter := session.EncodeRequestBody(request, writer)
-		if err := buf.CopyOnceTimeout(input, bodyWriter, time.Millisecond*100); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
-			return newError("failed to write first payload").Base(err)
-		}
+			writer := buf.NewBufferedWriter(buf.NewWriter(conn))
+			if err := session.EncodeRequestHeader(request, writer); err != nil {
+				return newError("failed to encode request").Base(err).AtWarning()
+			}
 
-		if err := writer.SetBuffered(false); err != nil {
-			return err
-		}
+			bodyWriter := session.EncodeRequestBody(request, writer)
+			if err := buf.CopyOnceTimeout(input, bodyWriter, time.Millisecond*100); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
+				return newError("failed to write first payload").Base(err)
+			}
 
-		if err := buf.Copy(input, bodyWriter, buf.UpdateActivity(timer)); err != nil {
-			return err
-		}
-
-		if request.Option.Has(protocol.RequestOptionChunkStream) && !account.NoTerminationSignal {
-			if err := bodyWriter.WriteMultiBuffer(buf.MultiBuffer{}); err != nil {
+			if err := writer.SetBuffered(false); err != nil {
 				return err
 			}
+
+			if err := buf.Copy(input, bodyWriter, buf.UpdateActivity(timer)); err != nil {
+				return err
+			}
+
+			if request.Option.Has(protocol.RequestOptionChunkStream) && !account.NoTerminationSignal {
+				if err := bodyWriter.WriteMultiBuffer(buf.MultiBuffer{}); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		}
+
+		responseDone := func() error {
+			defer timer.SetTimeout(sessionPolicy.Timeouts.UplinkOnly)
+
+			reader := &buf.BufferedReader{Reader: buf.NewReader(conn)}
+			header, err := session.DecodeResponseHeader(reader)
+			if err != nil {
+				return newError("failed to read header").Base(err)
+			}
+			h.handleCommand(rec.Destination(), header.Command)
+
+			bodyReader := session.DecodeResponseBody(request, reader)
+
+			return buf.Copy(bodyReader, output, buf.UpdateActivity(timer))
+		}
+		responseDonePost := task.OnSuccess(responseDone, task.Close(output))
+
+		if err := task.Run(ctx, requestDone, responseDonePost); err != nil {
+			return newError("connection ends").Base(err)
 		}
 
 		return nil
 	}
 
-	responseDone := func() error {
-		defer timer.SetTimeout(sessionPolicy.Timeouts.UplinkOnly)
-
-		reader := &buf.BufferedReader{Reader: buf.NewReader(conn)}
-		header, err := session.DecodeResponseHeader(reader)
-		if err != nil {
-			return newError("failed to read header").Base(err)
-		}
-		h.handleCommand(rec.Destination(), header.Command)
-
-		bodyReader := session.DecodeResponseBody(request, reader)
-
-		return buf.Copy(bodyReader, output, buf.UpdateActivity(timer))
+	if alternativeSniffer := session.AlternativeSnifferFromContext(ctx); alternativeSniffer == nil {
+		return fn(target.Address)
+	} else {
+		return alternativeSniffer(fn)
 	}
-
-	responseDonePost := task.OnSuccess(responseDone, task.Close(output))
-	if err := task.Run(ctx, requestDone, responseDonePost); err != nil {
-		return newError("connection ends").Base(err)
-	}
-
-	return nil
 }
 
 var (
