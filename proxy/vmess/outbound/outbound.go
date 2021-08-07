@@ -203,7 +203,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	if alternativeSniffer := alternativeSnifferFromContext(ctx); alternativeSniffer == nil {
 		return fn(target.Address)
 	} else {
-		return alternativeSniffer(fn)
+		return alternativeSniffer(target.Address, fn)
 	}
 }
 

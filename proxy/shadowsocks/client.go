@@ -181,7 +181,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	if alternativeSniffer := session.AlternativeSnifferFromContext(ctx); alternativeSniffer == nil {
 		return fn(destination.Address)
 	} else {
-		return alternativeSniffer(fn)
+		return alternativeSniffer(destination.Address, fn)
 	}
 }
 
