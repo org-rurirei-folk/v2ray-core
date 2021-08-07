@@ -96,7 +96,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	}
 	request.User = user
 
-	fn := func(addr net.Address) {
+	fn := func(addr net.Address) error {
 		request.Address = addr
 
 		sessionPolicy := c.policyManager.ForLevel(user.Level)
@@ -174,15 +174,15 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 			return nil
 		}
+
+		return nil
 	}
 
 	if alternativeSniffer := session.AlternativeSnifferFromContext(ctx); alternativeSniffer == nil {
-		fn(destination.Address)
+		return fn(destination.Address)
 	} else {
-		alternativeSniffer(fn)
+		return alternativeSniffer(fn)
 	}
-
-	return nil
 }
 
 func init() {
