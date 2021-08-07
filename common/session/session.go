@@ -73,7 +73,7 @@ type Content struct {
 }
 
 // AlternativeSniffer is a function for the external placement of the request.Address
-type AlternativeSniffer = func(func(net.Address) error) error
+type AlternativeSniffer = func(net.Address, func(net.Address) error) error
 
 // Sockopt is the settings for socket connection.
 type Sockopt struct {
