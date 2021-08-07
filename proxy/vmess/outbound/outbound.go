@@ -76,6 +76,8 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	}
 	defer conn.Close()
 
+	alternativeSnifferFromContext := session.AlternativeSnifferFromContext
+
 	outbound := session.OutboundFromContext(ctx)
 	if outbound == nil || !outbound.Target.IsValid() {
 		return newError("target not specified").AtError()
@@ -198,7 +200,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		return nil
 	}
 
-	if alternativeSniffer := session.AlternativeSnifferFromContext(ctx); alternativeSniffer == nil {
+	if alternativeSniffer := alternativeSnifferFromContext(ctx); alternativeSniffer == nil {
 		return fn(target.Address)
 	} else {
 		return alternativeSniffer(fn)
