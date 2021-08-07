@@ -33,7 +33,7 @@ type Sniffer struct {
 func NewSniffer(ctx context.Context) *Sniffer {
 	if alternativeSniffer, metadata, err := UseAlternativeSniffer(); err == nil && alternativeSniffer != nil {
 		return &Sniffer{
-			sniffer: []protocolSnifferWithMetadata{
+			sniffer: []snifferWithMetadata{
 				{alternativeSniffer, metadata},
 			},
 		}
