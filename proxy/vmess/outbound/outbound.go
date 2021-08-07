@@ -81,8 +81,8 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		return newError("target not specified").AtError()
 	}
 
-	target := outbound.TargetAddr
-	newError("tunneling request to ", target, " (", outbound.Target, ")", " via ", rec.Destination()).WriteToLog(session.ExportIDToError(ctx))
+	target := outbound.Target
+	newError("tunneling request to ", target, " via ", rec.Destination()).WriteToLog(session.ExportIDToError(ctx))
 
 	command := protocol.RequestCommandTCP
 	if target.Network == net.Network_UDP {
