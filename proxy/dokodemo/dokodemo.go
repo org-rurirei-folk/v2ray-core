@@ -89,7 +89,7 @@ func (d *Door) Process(ctx context.Context, network net.Network, conn internet.C
 	destinationOverridden := false
 	if d.config.FollowRedirect {
 		if outbound := session.OutboundFromContext(ctx); outbound != nil && outbound.TargetAddr.IsValid() {
-			dest = outbound.TargetAddr
+			dest = outbound.Target
 			destinationOverridden = true
 		} else if handshake, ok := conn.(hasHandshakeAddress); ok {
 			addr := handshake.HandshakeAddress()
