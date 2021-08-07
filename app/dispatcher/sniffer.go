@@ -32,6 +32,14 @@ type Sniffer struct {
 }
 
 func NewSniffer(ctx context.Context) *Sniffer {
+	if alternativeSniffer, metadata, err := UseAlternativeSniffer(); err == nil && alternativeSniffer != nil {
+		return &Sniffer{
+			sniffer: []snifferWithMetadata{
+				{alternativeSniffer, metadata},
+			},
+		}
+	}
+
 	ret := &Sniffer{
 		sniffer: []snifferWithMetadata{
 			{func(c context.Context, b []byte) (SniffResult, error) { return http.SniffHTTP(b) }, false},
@@ -48,6 +56,10 @@ func NewSniffer(ctx context.Context) *Sniffer {
 		}
 	}
 	return ret
+}
+
+var UseAlternativeSniffer = func() (protocolSniffer, bool, error) {
+	return nil, false, nil
 }
 
 var errUnknownContent = newError("unknown content")

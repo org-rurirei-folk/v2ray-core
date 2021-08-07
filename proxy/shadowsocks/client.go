@@ -96,83 +96,93 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	}
 	request.User = user
 
-	sessionPolicy := c.policyManager.ForLevel(user.Level)
-	ctx, cancel := context.WithCancel(ctx)
-	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
+	fn := func(addr net.Address) error {
+		request.Address = addr
 
-	if request.Command == protocol.RequestCommandTCP {
-		bufferedWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
-		bodyWriter, err := WriteTCPRequest(request, bufferedWriter)
-		if err != nil {
-			return newError("failed to write request").Base(err)
-		}
+		sessionPolicy := c.policyManager.ForLevel(user.Level)
+		ctx, cancel := context.WithCancel(ctx)
+		timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
 
-		if err := bufferedWriter.SetBuffered(false); err != nil {
-			return err
-		}
-
-		requestDone := func() error {
-			defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
-			return buf.Copy(link.Reader, bodyWriter, buf.UpdateActivity(timer))
-		}
-
-		responseDone := func() error {
-			defer timer.SetTimeout(sessionPolicy.Timeouts.UplinkOnly)
-
-			responseReader, err := ReadTCPResponse(user, conn)
+		if request.Command == protocol.RequestCommandTCP {
+			bufferedWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
+			bodyWriter, err := WriteTCPRequest(request, bufferedWriter)
 			if err != nil {
+				return newError("failed to write request").Base(err)
+			}
+
+			if err := bufferedWriter.SetBuffered(false); err != nil {
 				return err
 			}
 
-			return buf.Copy(responseReader, link.Writer, buf.UpdateActivity(timer))
+			requestDone := func() error {
+				defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
+				return buf.Copy(link.Reader, bodyWriter, buf.UpdateActivity(timer))
+			}
+
+			responseDone := func() error {
+				defer timer.SetTimeout(sessionPolicy.Timeouts.UplinkOnly)
+
+				responseReader, err := ReadTCPResponse(user, conn)
+				if err != nil {
+					return err
+				}
+
+				return buf.Copy(responseReader, link.Writer, buf.UpdateActivity(timer))
+			}
+
+			responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
+			if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
+				return newError("connection ends").Base(err)
+			}
+
+			return nil
 		}
 
-		responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
-		if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
-			return newError("connection ends").Base(err)
+		if request.Command == protocol.RequestCommandUDP {
+			writer := &buf.SequentialWriter{Writer: &UDPWriter{
+				Writer:  conn,
+				Request: request,
+			}}
+
+			requestDone := func() error {
+				defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
+
+				if err := buf.Copy(link.Reader, writer, buf.UpdateActivity(timer)); err != nil {
+					return newError("failed to transport all UDP request").Base(err)
+				}
+				return nil
+			}
+
+			responseDone := func() error {
+				defer timer.SetTimeout(sessionPolicy.Timeouts.UplinkOnly)
+
+				reader := &UDPReader{
+					Reader: conn,
+					User:   user,
+				}
+
+				if err := buf.Copy(reader, link.Writer, buf.UpdateActivity(timer)); err != nil {
+					return newError("failed to transport all UDP response").Base(err)
+				}
+				return nil
+			}
+
+			responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
+			if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
+				return newError("connection ends").Base(err)
+			}
+
+			return nil
 		}
 
 		return nil
 	}
 
-	if request.Command == protocol.RequestCommandUDP {
-		writer := &buf.SequentialWriter{Writer: &UDPWriter{
-			Writer:  conn,
-			Request: request,
-		}}
-
-		requestDone := func() error {
-			defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
-
-			if err := buf.Copy(link.Reader, writer, buf.UpdateActivity(timer)); err != nil {
-				return newError("failed to transport all UDP request").Base(err)
-			}
-			return nil
-		}
-
-		responseDone := func() error {
-			defer timer.SetTimeout(sessionPolicy.Timeouts.UplinkOnly)
-
-			reader := &UDPReader{
-				Reader: conn,
-				User:   user,
-			}
-
-			if err := buf.Copy(reader, link.Writer, buf.UpdateActivity(timer)); err != nil {
-				return newError("failed to transport all UDP response").Base(err)
-			}
-			return nil
-		}
-
-		responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
-		if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
-			return newError("connection ends").Base(err)
-		}
-
-		return nil
+	if alternativeSniffer := session.AlternativeSnifferFromContext(ctx); alternativeSniffer == nil {
+		return fn(destination.Address)
+	} else {
+		return alternativeSniffer(fn)
 	}
-
-	return nil
 }
 
 func init() {
