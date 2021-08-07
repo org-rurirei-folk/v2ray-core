@@ -14,6 +14,7 @@ const (
 	muxPreferedSessionKey
 	sockoptSessionKey
 	trackedConnectionErrorKey
+	alternativeSnifferKey
 )
 
 // ContextWithID returns a new context with the given ID.
@@ -58,6 +59,17 @@ func ContextWithContent(ctx context.Context, content *Content) context.Context {
 func ContentFromContext(ctx context.Context) *Content {
 	if content, ok := ctx.Value(contentSessionKey).(*Content); ok {
 		return content
+	}
+	return nil
+}
+
+func ContextWithAlternativeSniffer(ctx context.Context, alternativeSniffer AlternativeSniffer) context.Context {
+	return context.WithValue(ctx, alternativeSnifferKey, alternativeSniffer)
+}
+
+func AlternativeSnifferFromContext(ctx context.Context) AlternativeSniffer {
+	if alternativeSniffer, ok := ctx.Value(alternativeSnifferKey).(AlternativeSniffer); ok {
+		return alternativeSniffer
 	}
 	return nil
 }
