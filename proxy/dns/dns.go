@@ -107,7 +107,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 
 	srcNetwork := outbound.Target.Network
 
-	dest := outbound.TargetAddr
+	dest := outbound.Target
 	if h.server.Network != net.Network_Unknown {
 		dest.Network = h.server.Network
 	}
@@ -118,7 +118,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 		dest.Port = h.server.Port
 	}
 
-	newError("handling DNS traffic to ", dest, " (", outbound.Target, ")").WriteToLog(session.ExportIDToError(ctx))
+	newError("handling DNS traffic to ", dest).WriteToLog(session.ExportIDToError(ctx))
 
 	conn := &outboundConn{
 		dialer: func() (internet.Connection, error) {

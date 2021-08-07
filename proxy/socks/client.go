@@ -54,7 +54,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		return newError("target not specified.")
 	}
 	// Destination of the inner request.
-	destination := outbound.TargetAddr
+	destination := outbound.Target
 
 	// Outbound server.
 	var server *protocol.ServerSpec

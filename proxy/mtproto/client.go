@@ -24,7 +24,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	if outbound == nil || !outbound.Target.IsValid() {
 		return newError("unknown destination.")
 	}
-	dest := outbound.TargetAddr
+	dest := outbound.Target
 	if dest.Network != net.Network_TCP {
 		return newError("not TCP traffic", dest)
 	}
