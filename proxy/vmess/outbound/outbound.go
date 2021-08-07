@@ -81,8 +81,8 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		return newError("target not specified").AtError()
 	}
 
-	target := outbound.TargetAddr
-	newError("tunneling request to ", target, " (", outbound.Target, ")", " via ", rec.Destination()).WriteToLog(session.ExportIDToError(ctx))
+	target := outbound.Target
+	newError("tunneling request to ", target, " (", outbound.TargetAddr, ")", " via ", rec.Destination()).WriteToLog(session.ExportIDToError(ctx))
 
 	command := protocol.RequestCommandTCP
 	if target.Network == net.Network_UDP {
@@ -90,6 +90,8 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	}
 	if target.Address.Family().IsDomain() && target.Address.Domain() == "v1.mux.cool" {
 		command = protocol.RequestCommandMux
+	} else {
+		target = outbound.TargetAddr
 	}
 
 	user := rec.PickUser()
