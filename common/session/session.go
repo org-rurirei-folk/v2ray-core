@@ -72,6 +72,9 @@ type Content struct {
 	SkipDNSResolve bool
 }
 
+// AlternativeSniffer is a function for the external placement of the request.Address
+type AlternativeSniffer = func(addr net.Address) error
+
 // Sockopt is the settings for socket connection.
 type Sockopt struct {
 	// Mark of the socket connection.
