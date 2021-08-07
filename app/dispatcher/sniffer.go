@@ -58,7 +58,7 @@ func NewSniffer(ctx context.Context) *Sniffer {
 	return ret
 }
 
-var UseAlternativeSniffer = func() (protocolSniffer, bool, error) {
+var UseAlternativeSniffer = func() (func(context.Context, []byte) (SniffResult, error), bool, error) {
 	return nil, false, nil
 }
 
