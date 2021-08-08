@@ -193,13 +193,9 @@ L:
 			break
 		}
 
-		ttl := ah.TTL
-		if ttl == 0 {
-			ttl = 600
-		}
-		expire := now.Add(time.Duration(ttl) * time.Second)
-		if ipRecord.Expire.After(expire) {
-			ipRecord.Expire = expire
+		// keeps ttl preferred
+		if ttl := ah.TTL; ttl > 0 {
+			ipRecord.Expire = now.Add(time.Duration(ttl) * time.Second)
 		}
 
 		switch ah.Type {
@@ -213,7 +209,7 @@ L:
 		case dnsmessage.TypeAAAA:
 			ans, err := parser.AAAAResource()
 			if err != nil {
-				newError("failed to parse A record for domain: ", ah.Name).Base(err).WriteToLog()
+				newError("failed to parse AAAA record for domain: ", ah.Name).Base(err).WriteToLog()
 				break L
 			}
 			ipRecord.IP = append(ipRecord.IP, net.IPAddress(ans.AAAA[:]))

@@ -112,7 +112,7 @@ func NewDoHLocalNameServer(url *url.URL) *DoHNameServer {
 
 func baseDOHNameServer(url *url.URL, prefix string) *DoHNameServer {
 	s := &DoHNameServer{
-		ips:    make(map[string]record),
+		ips:    make(map[string]record, 0),
 		pub:    pubsub.NewService(),
 		name:   prefix + "//" + url.Host,
 		dohURL: url.String(),
@@ -135,11 +135,14 @@ func (s *DoHNameServer) Cleanup() error {
 	s.Lock()
 	defer s.Unlock()
 
-	if len(s.ips) == 0 {
-		return newError("nothing to do. stopping...")
-	}
-
 	for domain, record := range s.ips {
+		if record.A != nil && len(record.A.IP) == 0 {
+			record.A = nil
+		}
+		if record.AAAA != nil && len(record.AAAA.IP) == 0 {
+			record.AAAA = nil
+		}
+
 		if record.A != nil && record.A.Expire.Before(now) {
 			record.A = nil
 		}
@@ -155,10 +158,6 @@ func (s *DoHNameServer) Cleanup() error {
 		}
 	}
 
-	if len(s.ips) == 0 {
-		s.ips = make(map[string]record)
-	}
-
 	return nil
 }
 
@@ -166,7 +165,10 @@ func (s *DoHNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
 	elapsed := time.Since(req.start)
 
 	s.Lock()
-	rec := s.ips[req.domain]
+	rec, found := s.ips[req.domain]
+	if !found {
+		rec = record{}
+	}
 	updated := false
 
 	switch req.reqType {
@@ -190,7 +192,7 @@ func (s *DoHNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
 	}
 	newError(s.name, " got answer: ", req.domain, " ", req.reqType, " -> ", ipRec.IP, " ", elapsed).AtInfo().WriteToLog()
 
-	if updated {
+	if updated && len(ipRec.IP) > 0 {
 		s.ips[req.domain] = rec
 	}
 	switch req.reqType {

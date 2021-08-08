@@ -676,6 +676,7 @@ func TestLocalDomain(t *testing.T) {
 	common.Must(err)
 
 	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+	clientH := client.(feature_dns.HostsLookup)
 
 	startTime := time.Now()
 
@@ -711,6 +712,16 @@ func TestLocalDomain(t *testing.T) {
 			t.Fatal(r)
 		}
 	}
+	{ // Will match static ip
+		ips, err := clientH.LookupHosts("hostnamestatic")
+		if err != nil {
+			t.Fatal("unexpected error: ", err)
+		}
+
+		if r := cmp.Diff(ips, []net.IP{{127, 0, 0, 53}}); r != "" {
+			t.Fatal(r)
+		}
+	}
 
 	{ // Will match domain replacing
 		ips, err := client.LookupIP("hostnamealias")
@@ -720,6 +731,12 @@ func TestLocalDomain(t *testing.T) {
 
 		if r := cmp.Diff(ips, []net.IP{{127, 0, 0, 1}}); r != "" {
 			t.Fatal(r)
+		}
+	}
+	{ // Will match domain replacing
+		_, err := clientH.LookupHosts("hostnamealias")
+		if err != feature_dns.ErrEmptyResponse {
+			t.Fatal("unexpected error: ", err)
 		}
 	}
 

@@ -57,7 +57,7 @@ func NewQUICNameServer(url *url.URL) (*QUICNameServer, error) {
 	dest := net.UDPDestination(net.DomainAddress(url.Hostname()), port)
 
 	s := &QUICNameServer{
-		ips:         make(map[string]record),
+		ips:         make(map[string]record, 0),
 		pub:         pubsub.NewService(),
 		name:        url.String(),
 		destination: dest,
@@ -81,11 +81,14 @@ func (s *QUICNameServer) Cleanup() error {
 	s.Lock()
 	defer s.Unlock()
 
-	if len(s.ips) == 0 {
-		return newError("nothing to do. stopping...")
-	}
-
 	for domain, record := range s.ips {
+		if record.A != nil && len(record.A.IP) == 0 {
+			record.A = nil
+		}
+		if record.AAAA != nil && len(record.AAAA.IP) == 0 {
+			record.AAAA = nil
+		}
+
 		if record.A != nil && record.A.Expire.Before(now) {
 			record.A = nil
 		}
@@ -101,10 +104,6 @@ func (s *QUICNameServer) Cleanup() error {
 		}
 	}
 
-	if len(s.ips) == 0 {
-		s.ips = make(map[string]record)
-	}
-
 	return nil
 }
 
@@ -112,7 +111,10 @@ func (s *QUICNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
 	elapsed := time.Since(req.start)
 
 	s.Lock()
-	rec := s.ips[req.domain]
+	rec, found := s.ips[req.domain]
+	if !found {
+		rec = record{}
+	}
 	updated := false
 
 	switch req.reqType {
@@ -136,7 +138,7 @@ func (s *QUICNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
 	}
 	newError(s.name, " got answer: ", req.domain, " ", req.reqType, " -> ", ipRec.IP, " ", elapsed).AtInfo().WriteToLog()
 
-	if updated {
+	if updated && len(ipRec.IP) > 0 {
 		s.ips[req.domain] = rec
 	}
 	switch req.reqType {

@@ -28,11 +28,10 @@ type Server interface {
 
 // Client is the interface for DNS client.
 type Client struct {
-	server       Server
-	clientIP     net.IP
-	skipFallback bool
-	domains      []string
-	expectIPs    []*router.GeoIPMatcher
+	server    Server
+	clientIP  net.IP
+	domains   []string
+	expectIPs []*router.GeoIPMatcher
 }
 
 var errExpectedIPNonMatch = errors.New("expectIPs not match")
@@ -151,7 +150,6 @@ func NewClient(ctx context.Context, ns *NameServer, clientIP net.IP, container r
 
 		client.server = server
 		client.clientIP = clientIP
-		client.skipFallback = ns.SkipFallback
 		client.domains = rules
 		client.expectIPs = matchers
 		return nil
@@ -162,6 +160,7 @@ func NewClient(ctx context.Context, ns *NameServer, clientIP net.IP, container r
 // NewSimpleClient creates a DNS client with a simple destination.
 func NewSimpleClient(ctx context.Context, endpoint *net.Endpoint, clientIP net.IP) (*Client, error) {
 	client := &Client{}
+
 	err := core.RequireFeatures(ctx, func(dispatcher routing.Dispatcher) error {
 		server, err := NewServer(endpoint.AsDestination(), dispatcher)
 		if err != nil {
@@ -207,9 +206,8 @@ func (c *Client) QueryIP(ctx context.Context, domain string, option dns.IPOption
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
+	
 	ips, err := c.server.QueryIP(ctx, domain, clientIP, option, disableCache)
-	cancel()
-
 	if err != nil {
 		return ips, err
 	}
