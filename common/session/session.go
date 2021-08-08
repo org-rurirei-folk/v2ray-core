@@ -73,7 +73,7 @@ type Content struct {
 }
 
 // AlternativeSniffer is a function for the external placement of the request.Address
-type AlternativeSniffer = func(net.Address, func(net.Address) error) error
+type AlternativeSniffer = func(context.Context, net.Address, func(net.Address) error) error
 
 // AlternativeClientIP is a address for the external placement of the dns.QueryIP
 type AlternativeClientIP struct {
