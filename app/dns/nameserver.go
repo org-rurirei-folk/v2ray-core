@@ -206,7 +206,7 @@ func (c *Client) QueryIP(ctx context.Context, domain string, option dns.IPOption
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
-	drfer cancel()
+	defer cancel()
 	
 	ips, err := c.server.QueryIP(ctx, domain, clientIP, option, disableCache)
 	if err != nil {
