@@ -193,7 +193,17 @@ func (c *Client) Name() string {
 func (c *Client) QueryIP(ctx context.Context, domain string, option dns.IPOption, disableCache bool) ([]net.IP, error) {
 	clientIP := c.clientIP
 	if alternativeClientIP := session.AlternativeClientIPFromContext(ctx); alternativeClientIP != nil {
-		clientIP = alternativeClientIP.ClientIP.IP
+		switch altClientIP := alternativeClientIP.ClientIP; {
+		case altClientIP.Family().IsIP():
+			clientIP = altClientIP.IP()
+		case altClientIP.Family().IsDomain():
+			if alternativeSniffer := session.AlternativeSnifferFromContext(ctx); alternativeSniffer != nil {
+				alternativeSniffer(altClientIP, func(addr net.Address) error {
+					clientIP = addr.IP()
+					return nil
+				})
+			}
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
