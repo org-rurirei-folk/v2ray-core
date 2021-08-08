@@ -74,14 +74,21 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 			})
 		} */
 
-		ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
+		/* ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
 			ClientIP: dest.Address,
-		})
+		}) */
 
 		rawConn, err := dialer.Dial(ctx, dest)
 		if err != nil {
 			return err
 		}
+
+		if addr, _, err := net.SplitHostPort(rawConn.RemoteAddr().String()); err == nil {
+			ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
+				ClientIP: net.IPAddress([]byte(net.ParseIP(addr))),
+			})
+		}
+
 		conn = rawConn
 
 		return nil
