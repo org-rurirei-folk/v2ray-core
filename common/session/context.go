@@ -16,6 +16,7 @@ const (
 	systemDialerSessionKey
 	trackedConnectionErrorKey
 	alternativeSnifferKey
+	alternativeClientIPKey
 )
 
 // ContextWithID returns a new context with the given ID.
@@ -71,6 +72,17 @@ func ContextWithAlternativeSniffer(ctx context.Context, alternativeSniffer Alter
 func AlternativeSnifferFromContext(ctx context.Context) AlternativeSniffer {
 	if alternativeSniffer, ok := ctx.Value(alternativeSnifferKey).(AlternativeSniffer); ok {
 		return alternativeSniffer
+	}
+	return nil
+}
+
+func ContextWithAlternativeClientIP(ctx context.Context, alternativeClientIP *AlternativeClientIP) context.Context {
+	return context.WithValue(ctx, alternativeClientIPKey, alternativeClientIP)
+}
+
+func AlternativeClientIPFromContext(ctx context.Context) *AlternativeClientIP {
+	if alternativeClientIP, ok := ctx.Value(alternativeClientIPKey).(*AlternativeClientIP); ok {
+		return alternativeClientIP
 	}
 	return nil
 }

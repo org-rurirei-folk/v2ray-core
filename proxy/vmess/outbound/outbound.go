@@ -63,7 +63,13 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 
 	err := retry.ExponentialBackoff(5, 200).On(func() error {
 		rec = h.serverPicker.PickServer()
-		rawConn, err := dialer.Dial(ctx, rec.Destination())
+		dest := rec.Destination()
+
+		ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
+			ClientIP: dest.Address,
+		})
+
+		rawConn, err := dialer.Dial(ctx, dest)
 		if err != nil {
 			return err
 		}

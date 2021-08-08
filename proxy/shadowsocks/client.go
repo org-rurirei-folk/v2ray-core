@@ -63,6 +63,11 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		server = c.serverPicker.PickServer()
 		dest := server.Destination()
 		dest.Network = network
+
+		ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
+			ClientIP: dest.Address,
+		})
+
 		rawConn, err := dialer.Dial(ctx, dest)
 		if err != nil {
 			return err
