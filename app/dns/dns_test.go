@@ -239,7 +239,7 @@ func TestUDPServer(t *testing.T) {
 		}
 	} */
 
-	{
+	/* {
 		clientv6 := client.(feature_dns.IPv6Lookup)
 		ips, err := clientv6.LookupIPv6("ipv4only.google.com")
 		if err != feature_dns.ErrEmptyResponse {
@@ -248,7 +248,7 @@ func TestUDPServer(t *testing.T) {
 		if len(ips) != 0 {
 			t.Fatal("ips: ", ips)
 		}
-	}
+	} */
 
 	dnsServer.Shutdown()
 
