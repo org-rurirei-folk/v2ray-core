@@ -67,8 +67,8 @@ func (*staticHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 			common.Must(err)
 			ans.Answer = append(ans.Answer, rr)
 
-		case q.Name == "notexist.google.com." && q.Qtype == dns.TypeAAAA:
-			ans.MsgHdr.Rcode = dns.RcodeNameError
+		// case q.Name == "notexist.google.com." && q.Qtype == dns.TypeAAAA:
+		//	ans.MsgHdr.Rcode = dns.RcodeNameError
 		}
 	}
 	w.WriteMsg(ans)
@@ -158,7 +158,7 @@ func TestUDPDNSTunnel(t *testing.T) {
 		}
 	}
 
-	{
+	/* {
 		m1 := new(dns.Msg)
 		m1.Id = dns.Id()
 		m1.RecursionDesired = true
@@ -173,9 +173,9 @@ func TestUDPDNSTunnel(t *testing.T) {
 		if len(in.Answer) != 0 {
 			t.Fatal("len(answer): ", len(in.Answer))
 		}
-	}
+	} */
 
-	{
+	/* {
 		m1 := new(dns.Msg)
 		m1.Id = dns.Id()
 		m1.RecursionDesired = true
@@ -189,7 +189,7 @@ func TestUDPDNSTunnel(t *testing.T) {
 		if in.Rcode != dns.RcodeNameError {
 			t.Error("expected NameError, but got ", in.Rcode)
 		}
-	}
+	} */
 }
 
 func TestTCPDNSTunnel(t *testing.T) {
