@@ -65,7 +65,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		dest.Network = network
 
 		ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
-			ClientIP: dest,
+			ClientIP: dest.Address,
 		})
 
 		rawConn, err := dialer.Dial(ctx, dest)
