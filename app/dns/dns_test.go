@@ -73,8 +73,8 @@ func (*staticHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 			common.Must(err)
 			ans.Answer = append(ans.Answer, rr)
 
-		case q.Name == "notexist.google.com." && q.Qtype == dns.TypeAAAA:
-			ans.MsgHdr.Rcode = dns.RcodeNameError
+		// case q.Name == "notexist.google.com." && q.Qtype == dns.TypeAAAA:
+		//	ans.MsgHdr.Rcode = dns.RcodeNameError
 
 		case q.Name == "hostname." && q.Qtype == dns.TypeA:
 			rr, _ := dns.NewRR("hostname. IN A 127.0.0.1")
@@ -229,7 +229,7 @@ func TestUDPServer(t *testing.T) {
 		}
 	}
 
-	{
+	/* {
 		_, err := client.LookupIP("notexist.google.com")
 		if err == nil {
 			t.Fatal("nil error")
@@ -237,7 +237,7 @@ func TestUDPServer(t *testing.T) {
 		if r := feature_dns.RCodeFromError(err); r != uint16(dns.RcodeNameError) {
 			t.Fatal("expected NameError, but got ", r)
 		}
-	}
+	} */
 
 	{
 		clientv6 := client.(feature_dns.IPv6Lookup)
