@@ -64,14 +64,21 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		dest := server.Destination()
 		dest.Network = network
 
-		ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
+		/* ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
 			ClientIP: dest.Address,
-		})
+		}) */
 
 		rawConn, err := dialer.Dial(ctx, dest)
 		if err != nil {
 			return err
 		}
+
+		if addr, _, err := net.SplitHostPort(rawConn.RemoteAddr().String()); err == nil {
+			ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
+				ClientIP: net.IPAddress([]byte(net.ParseIP(addr))),
+			})
+		}
+
 		conn = rawConn
 
 		return nil
@@ -186,7 +193,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	if alternativeSniffer := session.AlternativeSnifferFromContext(ctx); alternativeSniffer == nil {
 		return fn(destination.Address)
 	} else {
-		return alternativeSniffer(destination.Address, fn)
+		return alternativeSniffer(ctx, destination.Address, fn)
 	}
 }
 

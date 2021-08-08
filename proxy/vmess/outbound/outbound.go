@@ -58,6 +58,8 @@ func New(ctx context.Context, config *Config) (*Handler, error) {
 
 // Process implements proxy.Outbound.Process().
 func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer internet.Dialer) error {
+	alternativeSnifferFromContext := session.AlternativeSnifferFromContext
+
 	var rec *protocol.ServerSpec
 	var conn internet.Connection
 
@@ -65,14 +67,28 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		rec = h.serverPicker.PickServer()
 		dest := rec.Destination()
 
-		ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
+		/* if alternativeSniffer := alternativeSnifferFromContext(ctx); alternativeSniffer != nil {
+			alternativeSniffer(ctx, dest.Address, func(addr net.Address) error {
+				dest.Address = addr
+				return nil
+			})
+		} */
+
+		/* ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
 			ClientIP: dest.Address,
-		})
+		}) */
 
 		rawConn, err := dialer.Dial(ctx, dest)
 		if err != nil {
 			return err
 		}
+
+		if addr, _, err := net.SplitHostPort(rawConn.RemoteAddr().String()); err == nil {
+			ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
+				ClientIP: net.IPAddress([]byte(net.ParseIP(addr))),
+			})
+		}
+
 		conn = rawConn
 
 		return nil
@@ -81,8 +97,6 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		return newError("failed to find an available destination").Base(err).AtWarning()
 	}
 	defer conn.Close()
-
-	alternativeSnifferFromContext := session.AlternativeSnifferFromContext
 
 	outbound := session.OutboundFromContext(ctx)
 	if outbound == nil || !outbound.Target.IsValid() {
@@ -209,7 +223,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	if alternativeSniffer := alternativeSnifferFromContext(ctx); alternativeSniffer == nil {
 		return fn(target.Address)
 	} else {
-		return alternativeSniffer(target.Address, fn)
+		return alternativeSniffer(ctx, target.Address, fn)
 	}
 }
 

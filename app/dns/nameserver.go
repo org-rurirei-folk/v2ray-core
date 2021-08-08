@@ -196,12 +196,12 @@ func (c *Client) QueryIP(ctx context.Context, domain string, option dns.IPOption
 		case altClientIP.Family().IsIP():
 			clientIP = altClientIP.IP()
 		case altClientIP.Family().IsDomain():
-			if alternativeSniffer := session.AlternativeSnifferFromContext(ctx); alternativeSniffer != nil {
-				alternativeSniffer(altClientIP, func(addr net.Address) error {
+			/* if alternativeSniffer := session.AlternativeSnifferFromContext(ctx); alternativeSniffer != nil {
+				alternativeSniffer(ctx, altClientIP, func(addr net.Address) error {
 					clientIP = addr.IP()
 					return nil
 				})
-			}
+			} */
 		}
 	}
 
