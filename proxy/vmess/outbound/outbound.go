@@ -67,12 +67,12 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		rec = h.serverPicker.PickServer()
 		dest := rec.Destination()
 
-		if alternativeSniffer := alternativeSnifferFromContext(ctx); alternativeSniffer != nil {
+		/* if alternativeSniffer := alternativeSnifferFromContext(ctx); alternativeSniffer != nil {
 			alternativeSniffer(ctx, dest.Address, func(addr net.Address) error {
 				dest.Address = addr
 				return nil
 			})
-		}
+		} */
 
 		ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
 			ClientIP: dest.Address,
