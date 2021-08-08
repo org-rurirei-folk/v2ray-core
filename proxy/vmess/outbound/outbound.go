@@ -58,12 +58,21 @@ func New(ctx context.Context, config *Config) (*Handler, error) {
 
 // Process implements proxy.Outbound.Process().
 func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer internet.Dialer) error {
+	alternativeSnifferFromContext := session.AlternativeSnifferFromContext
+
 	var rec *protocol.ServerSpec
 	var conn internet.Connection
 
 	err := retry.ExponentialBackoff(5, 200).On(func() error {
 		rec = h.serverPicker.PickServer()
 		dest := rec.Destination()
+
+		if alternativeSniffer := alternativeSnifferFromContext(ctx); alternativeSniffer != nil {
+			alternativeSniffer(ctx, dest.Address, func(addr net.Address) error {
+				dest.Address = addr
+				return nil
+			})
+		}
 
 		ctx = session.ContextWithAlternativeClientIP(ctx, &session.AlternativeClientIP{
 			ClientIP: dest.Address,
@@ -81,8 +90,6 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		return newError("failed to find an available destination").Base(err).AtWarning()
 	}
 	defer conn.Close()
-
-	alternativeSnifferFromContext := session.AlternativeSnifferFromContext
 
 	outbound := session.OutboundFromContext(ctx)
 	if outbound == nil || !outbound.Target.IsValid() {
