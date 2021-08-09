@@ -8,7 +8,6 @@ import (
 
 	"github.com/v2fly/v2ray-core/v4/app/commander"
 	loggerservice "github.com/v2fly/v2ray-core/v4/app/log/command"
-	observatoryservice "github.com/v2fly/v2ray-core/v4/app/observatory/command"
 	handlerservice "github.com/v2fly/v2ray-core/v4/app/proxyman/command"
 	statsservice "github.com/v2fly/v2ray-core/v4/app/stats/command"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
@@ -35,8 +34,6 @@ func (c *APIConfig) Build() (*commander.Config, error) {
 			services = append(services, serial.ToTypedMessage(&loggerservice.Config{}))
 		case "statsservice":
 			services = append(services, serial.ToTypedMessage(&statsservice.Config{}))
-		case "observatoryservice":
-			services = append(services, serial.ToTypedMessage(&observatoryservice.Config{}))
 		default:
 			if !strings.HasPrefix(s, "#") {
 				continue
