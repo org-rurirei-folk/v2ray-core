@@ -377,8 +377,6 @@ func (p TransportProtocol) Build() (string, error) {
 		return "domainsocket", nil
 	case "quic":
 		return "quic", nil
-	case "gun", "grpc":
-		return "gun", nil
 	default:
 		return "", newError("Config: unknown transport protocol: ", p)
 	}
@@ -432,8 +430,6 @@ type StreamConfig struct {
 	HTTPSettings   *HTTPConfig         `json:"httpSettings"`
 	DSSettings     *DomainSocketConfig `json:"dsSettings"`
 	QUICSettings   *QUICConfig         `json:"quicSettings"`
-	GunSettings    *GunConfig          `json:"gunSettings"`
-	GRPCSettings   *GunConfig          `json:"grpcSettings"`
 	SocketSettings *SocketConfig       `json:"sockopt"`
 }
 
@@ -520,19 +516,6 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
 			ProtocolName: "quic",
 			Settings:     serial.ToTypedMessage(qs),
-		})
-	}
-	if c.GunSettings == nil {
-		c.GunSettings = c.GRPCSettings
-	}
-	if c.GunSettings != nil {
-		gs, err := c.GunSettings.Build()
-		if err != nil {
-			return nil, newError("Failed to build Gun config.").Base(err)
-		}
-		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
-			ProtocolName: "gun",
-			Settings:     serial.ToTypedMessage(gs),
 		})
 	}
 	if c.SocketSettings != nil {

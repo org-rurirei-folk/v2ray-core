@@ -356,7 +356,6 @@ type Config struct {
 	Reverse          *ReverseConfig          `json:"reverse"`
 	FakeDNS          *FakeDNSConfig          `json:"fakeDns"`
 	BrowserForwarder *BrowserForwarderConfig `json:"browserForwarder"`
-	Observatory      *ObservatoryConfig      `json:"observatory"`
 
 	Services map[string]*json.RawMessage `json:"services"`
 }
@@ -418,10 +417,6 @@ func (c *Config) Override(o *Config, fn string) {
 
 	if o.BrowserForwarder != nil {
 		c.BrowserForwarder = o.BrowserForwarder
-	}
-
-	if o.Observatory != nil {
-		c.Observatory = o.Observatory
 	}
 
 	// deprecated attrs... keep them for now
@@ -575,14 +570,6 @@ func (c *Config) Build() (*core.Config, error) {
 
 	if c.BrowserForwarder != nil {
 		r, err := c.BrowserForwarder.Build()
-		if err != nil {
-			return nil, err
-		}
-		config.App = append(config.App, serial.ToTypedMessage(r))
-	}
-
-	if c.Observatory != nil {
-		r, err := c.Observatory.Build()
 		if err != nil {
 			return nil, err
 		}
